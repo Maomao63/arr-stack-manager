@@ -9,27 +9,37 @@ templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "t
 CONFIG_FILE = "/app/config.json"
 
 def load_config():
-    default_config = {"sonarr_a_url": "", "sonarr_a_api": "", "radarr_a_url": "", "radarr_a_api": ""}
+    default = {"sonarr_a_url": "", "sonarr_a_api": "", "radarr_a_url": "", "radarr_a_api": ""}
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, "r") as f:
                 data = json.load(f)
-                return data if isinstance(data, dict) else default_config
-        except Exception:
-            return default_config
-    return default_config
+                return data if isinstance(data, dict) else default
+        except:
+            return default
+    return default
 
 @app.get("/")
 async def read_root(request: Request):
-    # Config vorher laden, damit wir ein sauberes Dict haben
-    config_data = load_config()
-    return templates.TemplateResponse("index.html", {"request": request, "config": config_data})
+    c = load_config()
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "sonarr_a_url": c.get("sonarr_a_url"),
+        "sonarr_a_api": c.get("sonarr_a_api"),
+        "radarr_a_url": c.get("radarr_a_url"),
+        "radarr_a_api": c.get("radarr_a_api")
+    })
 
 @app.get("/settings")
 async def settings_page(request: Request):
-    # Config vorher laden, damit wir ein sauberes Dict haben
-    config_data = load_config()
-    return templates.TemplateResponse("settings.html", {"request": request, "config": config_data})
+    c = load_config()
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "sonarr_a_url": c.get("sonarr_a_url"),
+        "sonarr_a_api": c.get("sonarr_a_api"),
+        "radarr_a_url": c.get("radarr_a_url"),
+        "radarr_a_api": c.get("radarr_a_api")
+    })
 
 @app.post("/save-config")
 async def save_config(
