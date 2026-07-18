@@ -1,6 +1,7 @@
 FROM python:3.12-slim
 WORKDIR /app
-RUN pip install fastapi uvicorn jinja2 python-multipart
-# Wir kopieren den Code nicht mehr per COPY, 
-# da er durch das Volume vom Host überschrieben wird
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+# Wir nutzen /config für deine Appdata-Daten
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
