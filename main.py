@@ -1,6 +1,6 @@
 import json
 import os
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -19,32 +19,25 @@ def load_config():
     return default
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def read_root():
     c = load_config()
-    # Wir laden das Template manuell über das Template-Objekt, nicht über TemplateResponse
-    template = templates.get_template("index.html")
-    # Wir übergeben die Daten direkt als Keyword-Argumente an das Template
-    html_content = template.render(
-        request=request, 
-        sonarr_a_url=c.get("sonarr_a_url", ""),
-        sonarr_a_api=c.get("sonarr_a_api", ""),
-        radarr_a_url=c.get("radarr_a_url", ""),
-        radarr_a_api=c.get("radarr_a_api", "")
-    )
-    return HTMLResponse(content=html_content)
+    # Wir übergeben KEINEN 'request' mehr, um den Hash-Fehler zu vermeiden
+    return templates.TemplateResponse("index.html", {
+        "sonarr_a_url": c.get("sonarr_a_url", ""),
+        "sonarr_a_api": c.get("sonarr_a_api", ""),
+        "radarr_a_url": c.get("radarr_a_url", ""),
+        "radarr_a_api": c.get("radarr_a_api", "")
+    })
 
 @app.get("/settings", response_class=HTMLResponse)
-async def settings_page(request: Request):
+async def settings_page():
     c = load_config()
-    template = templates.get_template("settings.html")
-    html_content = template.render(
-        request=request,
-        sonarr_a_url=c.get("sonarr_a_url", ""),
-        sonarr_a_api=c.get("sonarr_a_api", ""),
-        radarr_a_url=c.get("radarr_a_url", ""),
-        radarr_a_api=c.get("radarr_a_api", "")
-    )
-    return HTMLResponse(content=html_content)
+    return templates.TemplateResponse("settings.html", {
+        "sonarr_a_url": c.get("sonarr_a_url", ""),
+        "sonarr_a_api": c.get("sonarr_a_api", ""),
+        "radarr_a_url": c.get("radarr_a_url", ""),
+        "radarr_a_api": c.get("radarr_a_api", "")
+    })
 
 @app.post("/save-config")
 async def save_config(
