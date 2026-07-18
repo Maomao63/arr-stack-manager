@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Arr-Stack Manager</title>
+    <!-- Tailwind CSS für das dunkle Design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX für das Tab-System ohne Neuladen -->
+    <script src="https://unpkg.com/htmx.org"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
 
+    <!-- Kopfzeile mit den Tabs -->
+    <nav class="border-b border-gray-700 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex space-x-8 h-16 items-center">
+                <span class="text-xl font-bold text-blue-400">Arr-Stack</span>
+                
+                <!-- Die Tabs zum Switchen -->
+                <button hx-get="/sonarr-data" hx-target="#content" class="px-3 py-2 hover:bg-gray-700 rounded transition">Sonarr</button>
+                <button hx-get="/radarr-data" hx-target="#content" class="px-3 py-2 hover:bg-gray-700 rounded transition">Radarr</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hier landet später der Inhalt -->
+    <main id="content" class="p-8">
+        <div class="max-w-4xl mx-auto text-center mt-20">
+            <h2 class="text-2xl font-semibold">Willkommen im Arr-Stack Manager</h2>
+            <p class="text-gray-400 mt-2">Wähle oben Sonarr oder Radarr aus, um deine Duplikate zu verwalten.</p>
+        </div>
+    </main>
+
+</body>
+</html>
