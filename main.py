@@ -2,7 +2,7 @@ import json
 import os
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -18,22 +18,33 @@ def load_config():
             return default
     return default
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     c = load_config()
-    # WICHTIG: Das 'request' Objekt muss als "request" im Dict stehen
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        **c  # Entpackt das Dict in einzelne Variablen
-    })
+    # Wir laden das Template manuell über das Template-Objekt, nicht über TemplateResponse
+    template = templates.get_template("index.html")
+    # Wir übergeben die Daten direkt als Keyword-Argumente an das Template
+    html_content = template.render(
+        request=request, 
+        sonarr_a_url=c.get("sonarr_a_url", ""),
+        sonarr_a_api=c.get("sonarr_a_api", ""),
+        radarr_a_url=c.get("radarr_a_url", ""),
+        radarr_a_api=c.get("radarr_a_api", "")
+    )
+    return HTMLResponse(content=html_content)
 
-@app.get("/settings")
+@app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     c = load_config()
-    return templates.TemplateResponse("settings.html", {
-        "request": request,
-        **c  # Entpackt das Dict in einzelne Variablen
-    })
+    template = templates.get_template("settings.html")
+    html_content = template.render(
+        request=request,
+        sonarr_a_url=c.get("sonarr_a_url", ""),
+        sonarr_a_api=c.get("sonarr_a_api", ""),
+        radarr_a_url=c.get("radarr_a_url", ""),
+        radarr_a_api=c.get("radarr_a_api", "")
+    )
+    return HTMLResponse(content=html_content)
 
 @app.post("/save-config")
 async def save_config(
