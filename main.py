@@ -1,6 +1,8 @@
 import json
 import os
 import requests
+from datetime import datetime
+from urllib.parse import quote
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from jinja2 import Environment, FileSystemLoader
@@ -8,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 app = FastAPI()
 env = Environment(loader=FileSystemLoader("templates"))
 CONFIG_FILE = "/config/config.json"
+HISTORY_FILE = "/config/history.json"
 
 def load_config():
     default = {
@@ -34,6 +37,19 @@ def delete_api(url, api_key, endpoint, item_id):
         return r.status_code == 200
     except: return False
 
+def log_history(app_type, title):
+    os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
+    history = []
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r") as f:
+                history = json.load(f)
+        except: pass
+    timestamp = datetime.now().strftime("%d.%m.%Y %H:%M")
+    history.insert(0, {"time": timestamp, "app": app_type.capitalize(), "title": title})
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history[:100], f) # Behält nur die letzten 100 Einträge
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     return HTMLResponse(content=env.get_template("index.html").render())
@@ -41,6 +57,16 @@ async def read_root():
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page():
     return HTMLResponse(content=env.get_template("settings.html").render(load_config()))
+
+@app.get("/history", response_class=HTMLResponse)
+async def history_page():
+    history = []
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r") as f:
+                history = json.load(f)
+        except: pass
+    return HTMLResponse(content=env.get_template("history.html").render(history=history))
 
 @app.get("/sonarr-data", response_class=HTMLResponse)
 async def sonarr_data():
@@ -50,14 +76,29 @@ async def sonarr_data():
     if not series_a or not series_b:
         return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Keine Verbindung zu Sonarr. Einstellungen prüfen.</div>")
 
-    tvdb_b = {s.get("tvdbId") for s in series_b}
+    dict_b = {s.get("tvdbId"): s for s in series_b if s.get("tvdbId")}
     duplicates = []
+    
     for s in series_a:
-        if s.get("tvdbId") in tvdb_b:
-            stats = s.get("statistics", {})
-            seasons, ep_total, ep_file = stats.get("seasonCount", 0), stats.get("totalEpisodeCount", 0), stats.get("episodeFileCount", 0)
-            status = "Keine Episoden" if ep_total == 0 else f"{seasons} Staffeln | Komplett ({ep_file}/{ep_total})" if ep_file == ep_total else f"{seasons} Staffeln | Unvollständig ({ep_total - ep_file} fehlen)"
-            duplicates.append({"id": s["id"], "title": s["title"], "status": status, "complete": ep_file == ep_total and ep_total > 0})
+        tvdb = s.get("tvdbId")
+        if tvdb in dict_b:
+            stats_a = s.get("statistics", {})
+            ep_file_a = stats_a.get("episodeFileCount", 0)
+            
+            # FILTER: Wenn keine Episoden geladen sind, ausblenden!
+            if ep_file_a == 0:
+                continue 
+                
+            ep_total_a = stats_a.get("totalEpisodeCount", 0)
+            
+            stats_b = dict_b[tvdb].get("statistics", {})
+            ep_file_b = stats_b.get("episodeFileCount", 0)
+            ep_total_b = stats_b.get("totalEpisodeCount", 0)
+            
+            status = f"Instanz A: {ep_file_a}/{ep_total_a} Folgen | Instanz B: {ep_file_b}/{ep_total_b} Folgen"
+            safe_title = quote(s["title"])
+            
+            duplicates.append({"id": s["id"], "title": s["title"], "status": status, "complete": ep_file_a == ep_total_a, "safe_title": safe_title})
             
     return HTMLResponse(content=env.get_template("sonarr.html").render(duplicates=duplicates))
 
@@ -69,21 +110,32 @@ async def radarr_data():
     if not movies_a or not movies_b:
         return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Keine Verbindung zu Radarr. Einstellungen prüfen.</div>")
 
-    tmdb_b = {m.get("tmdbId") for m in movies_b}
+    dict_b = {m.get("tmdbId"): m for m in movies_b if m.get("tmdbId")}
     duplicates = []
+    
     for m in movies_a:
-        if m.get("tmdbId") in tmdb_b:
-            status = "Film vorhanden" if m.get("hasFile") else "Keine Datei vorhanden"
-            duplicates.append({"id": m["id"], "title": m["title"], "status": status, "complete": m.get("hasFile")})
+        tmdb = m.get("tmdbId")
+        if tmdb in dict_b:
+            # FILTER: Wenn der Film noch keine Datei hat, ausblenden!
+            if not m.get("hasFile"):
+                continue
+                
+            has_file_b = dict_b[tmdb].get("hasFile")
+            b_status = "Vorhanden" if has_file_b else "Fehlt"
+            status = f"Instanz A: Vorhanden | Instanz B: {b_status}"
+            safe_title = quote(m["title"])
+            
+            duplicates.append({"id": m["id"], "title": m["title"], "status": status, "complete": True, "safe_title": safe_title})
             
     return HTMLResponse(content=env.get_template("radarr.html").render(duplicates=duplicates))
 
 @app.delete("/delete/{app_type}/{item_id}", response_class=HTMLResponse)
-async def delete_item(app_type: str, item_id: int):
+async def delete_item(app_type: str, item_id: int, title: str = "Unbekannt"):
     c = load_config()
     url, api, endpoint = (c["sonarr_a_url"], c["sonarr_a_api"], "series") if app_type == "sonarr" else (c["radarr_a_url"], c["radarr_a_api"], "movie")
     if delete_api(url, api, endpoint, item_id):
-        return HTMLResponse("<div class='text-green-400 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20'>Erfolgreich von Instanz A gelöscht!</div>")
+        log_history(app_type, title)
+        return HTMLResponse(f"<div class='text-green-400 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20'>Erfolgreich gelöscht: {title}</div>")
     return HTMLResponse("<div class='text-red-400 font-bold bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20'>Fehler beim Löschen</div>")
 
 @app.post("/save-config")
