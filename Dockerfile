@@ -3,5 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-# Statt uvicorn-Modul-Import nutzen wir den direkten Dateiaufruf
-CMD ["python3", "main.py"]
+# Wir setzen die Umgebungsvariable für den Python-Pfad
+ENV PYTHONPATH=/app
+# Hier der korrekte Aufruf ohne Dateipfad-Fehler
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
