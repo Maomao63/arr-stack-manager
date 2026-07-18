@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from jinja2 import Environment, FileSystemLoader
 
 app = FastAPI()
-# Wir laden die Templates direkt mit Jinja2, ohne die FastAPI/Starlette-Klassen
+# Jinja-Umgebung laden
 env = Environment(loader=FileSystemLoader("templates"))
 CONFIG_FILE = "/app/config.json"
 
@@ -21,23 +21,25 @@ def load_config():
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    c = load_config()
-    # Direktes Laden und Rendern ohne Starlette-Cache
     template = env.get_template("index.html")
-    return HTMLResponse(content=template.render(c))
+    return HTMLResponse(content=template.render())
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page():
     c = load_config()
     template = env.get_template("settings.html")
-    return HTMLResponse(content=content) # Korrektur: hier muss es 'template.render(c)' heißen
+    # Hier war der Fehler: Die Variable 'content' muss erst definiert werden!
+    content = template.render(c)
+    return HTMLResponse(content=content)
 
-# Hier das korrigierte settings_page für das Copy-Paste:
-@app.get("/settings", response_class=HTMLResponse)
-async def settings_page():
-    c = load_config()
-    template = env.get_template("settings.html")
-    return HTMLResponse(content=template.render(c))
+# Damit die 404 Fehler verschwinden, brauchen wir diese Platzhalter:
+@app.get("/sonarr-data", response_class=HTMLResponse)
+async def sonarr_data():
+    return "<div>Sonarr Daten Bereich</div>"
+
+@app.get("/radarr-data", response_class=HTMLResponse)
+async def radarr_data():
+    return "<div>Radarr Daten Bereich</div>"
 
 @app.post("/save-config")
 async def save_config(
