@@ -5,7 +5,6 @@ services:
     restart: unless-stopped
     ports:
       - "5005:8000"
-    volumes:
-      - /mnt/user/appdata/arr-stack-manager:/app
+    # Volume komplett entfernen, damit der Container die internen Dateien nutzt
     environment:
       - TZ=Europe/Berlin
