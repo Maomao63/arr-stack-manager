@@ -10,13 +10,20 @@ CONFIG_FILE = "config.json"
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(CONFIG_FILE, "r") as f:
+                return json.load(f)
+        except:
+            pass
     return {"sonarr_a_url": "", "sonarr_a_api": "", "radarr_a_url": "", "radarr_a_api": ""}
 
 @app.get("/")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "config": load_config()})
+
+@app.get("/settings")
+async def settings_page(request: Request):
+    return templates.TemplateResponse("settings.html", {"request": request, "config": load_config()})
 
 @app.post("/save-config")
 async def save_config(
