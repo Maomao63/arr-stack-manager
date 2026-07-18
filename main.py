@@ -3,9 +3,16 @@ import os
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from jinja2 import Environment, FileSystemLoader
 
 app = FastAPI()
+
+# Wir erstellen eine eigene Jinja2-Umgebung ohne Cache
+# Das verhindert, dass Jinja2 versucht, Requests zu cachen
+env = Environment(loader=FileSystemLoader("templates"), cache_size=0)
 templates = Jinja2Templates(directory="templates")
+templates.env = env
+
 CONFIG_FILE = "/app/config.json"
 
 def load_config():
