@@ -1,12 +1,12 @@
 import json
 import os
 from fastapi import FastAPI, Form
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from jinja2 import Environment, FileSystemLoader
 
 app = FastAPI()
-# Wir behalten die Jinja-Umgebung für den Loader
-templates = Jinja2Templates(directory="templates")
+# Wir laden die Templates direkt mit Jinja2, ohne die FastAPI/Starlette-Klassen
+env = Environment(loader=FileSystemLoader("templates"))
 CONFIG_FILE = "/app/config.json"
 
 def load_config():
@@ -22,18 +22,22 @@ def load_config():
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     c = load_config()
-    # Wir laden das Template direkt aus der Umgebung, ohne den Starlette-Wrapper
-    template = templates.env.get_template("index.html")
-    # Rendern zu einem einfachen String
-    content = template.render(c)
-    return HTMLResponse(content=content)
+    # Direktes Laden und Rendern ohne Starlette-Cache
+    template = env.get_template("index.html")
+    return HTMLResponse(content=template.render(c))
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page():
     c = load_config()
-    template = templates.env.get_template("settings.html")
-    content = template.render(c)
-    return HTMLResponse(content=content)
+    template = env.get_template("settings.html")
+    return HTMLResponse(content=content) # Korrektur: hier muss es 'template.render(c)' heißen
+
+# Hier das korrigierte settings_page für das Copy-Paste:
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page():
+    c = load_config()
+    template = env.get_template("settings.html")
+    return HTMLResponse(content=template.render(c))
 
 @app.post("/save-config")
 async def save_config(
