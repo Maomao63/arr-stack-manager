@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 app = FastAPI()
+# Wir behalten die Jinja-Umgebung für den Loader
 templates = Jinja2Templates(directory="templates")
 CONFIG_FILE = "/app/config.json"
 
@@ -21,23 +22,18 @@ def load_config():
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     c = load_config()
-    # Wir übergeben KEINEN 'request' mehr, um den Hash-Fehler zu vermeiden
-    return templates.TemplateResponse("index.html", {
-        "sonarr_a_url": c.get("sonarr_a_url", ""),
-        "sonarr_a_api": c.get("sonarr_a_api", ""),
-        "radarr_a_url": c.get("radarr_a_url", ""),
-        "radarr_a_api": c.get("radarr_a_api", "")
-    })
+    # Wir laden das Template direkt aus der Umgebung, ohne den Starlette-Wrapper
+    template = templates.env.get_template("index.html")
+    # Rendern zu einem einfachen String
+    content = template.render(c)
+    return HTMLResponse(content=content)
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page():
     c = load_config()
-    return templates.TemplateResponse("settings.html", {
-        "sonarr_a_url": c.get("sonarr_a_url", ""),
-        "sonarr_a_api": c.get("sonarr_a_api", ""),
-        "radarr_a_url": c.get("radarr_a_url", ""),
-        "radarr_a_api": c.get("radarr_a_api", "")
-    })
+    template = templates.env.get_template("settings.html")
+    content = template.render(c)
+    return HTMLResponse(content=content)
 
 @app.post("/save-config")
 async def save_config(
