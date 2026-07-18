@@ -5,12 +5,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
 app = FastAPI()
-# Absoluter Pfad zu den Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 CONFIG_FILE = "/app/config.json"
 
 def load_config():
-    # Standard-Konfiguration
     default_config = {"sonarr_a_url": "", "sonarr_a_api": "", "radarr_a_url": "", "radarr_a_api": ""}
     if os.path.exists(CONFIG_FILE):
         try:
@@ -23,11 +21,15 @@ def load_config():
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "config": load_config()})
+    # Config vorher laden, damit wir ein sauberes Dict haben
+    config_data = load_config()
+    return templates.TemplateResponse("index.html", {"request": request, "config": config_data})
 
 @app.get("/settings")
 async def settings_page(request: Request):
-    return templates.TemplateResponse("settings.html", {"request": request, "config": load_config()})
+    # Config vorher laden, damit wir ein sauberes Dict haben
+    config_data = load_config()
+    return templates.TemplateResponse("settings.html", {"request": request, "config": config_data})
 
 @app.post("/save-config")
 async def save_config(
