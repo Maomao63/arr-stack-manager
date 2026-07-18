@@ -21,23 +21,18 @@ def load_config():
 @app.get("/")
 async def read_root(request: Request):
     c = load_config()
-    # WICHTIG: Das 'request' Objekt wird hier im Dictionary NICHT mehr mitgegeben.
-    # Jinja2 braucht das 'request' Objekt in diesem speziellen Aufbau nicht.
+    # WICHTIG: Das 'request' Objekt muss als "request" im Dict stehen
     return templates.TemplateResponse("index.html", {
-        "sonarr_a_url": c.get("sonarr_a_url", ""),
-        "sonarr_a_api": c.get("sonarr_a_api", ""),
-        "radarr_a_url": c.get("radarr_a_url", ""),
-        "radarr_a_api": c.get("radarr_a_api", "")
+        "request": request, 
+        **c  # Entpackt das Dict in einzelne Variablen
     })
 
 @app.get("/settings")
 async def settings_page(request: Request):
     c = load_config()
     return templates.TemplateResponse("settings.html", {
-        "sonarr_a_url": c.get("sonarr_a_url", ""),
-        "sonarr_a_api": c.get("sonarr_a_api", ""),
-        "radarr_a_url": c.get("radarr_a_url", ""),
-        "radarr_a_api": c.get("radarr_a_api", "")
+        "request": request,
+        **c  # Entpackt das Dict in einzelne Variablen
     })
 
 @app.post("/save-config")
