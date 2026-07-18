@@ -3,5 +3,5 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-# Hier der absolute Pfad zum Modul
-CMD ["uvicorn", "/app/main:app", "--host", "0.0.0.0", "--port", "8000"]
+# WICHTIG: Das Modul ist "main", die App-Instanz ist "app"
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
