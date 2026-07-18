@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-CONFIG_FILE = "config.json"
+CONFIG_FILE = "/app/config.json"
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
