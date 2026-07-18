@@ -6,6 +6,6 @@ services:
     ports:
       - "5005:8000"
     volumes:
-      - /mnt/user/appdata/arr-stack-manager/config.json:/app/config.json
+      - /mnt/user/appdata/arr-stack-manager:/app
     environment:
       - TZ=Europe/Berlin
