@@ -1,18 +1,36 @@
-<div class="max-w-4xl mx-auto bg-gray-800 p-8 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-gray-700">
-    <h2 class="text-2xl mb-6 font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Einstellungen (Vergleichs-Modus)</h2>
-    <form action="/save-config" method="post" class="grid grid-cols-2 gap-8">
-        <!-- Spalte A -->
-        <div class="space-y-4">
-            <h3 class="text-blue-400 font-semibold border-b border-gray-700 pb-2">Instanz A</h3>
-            <input type="text" name="sonarr_a_url" placeholder="Sonarr A URL" value="{{sonarr_a_url}}" class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            <input type="password" name="sonarr_a_api" placeholder="Sonarr A API" value="{{sonarr_a_api}}" class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+<div class="max-w-4xl mx-auto bg-slate-800/40 p-8 rounded-3xl border border-white/10 shadow-2xl">
+    <h2 class="text-3xl mb-8 font-extrabold text-white">Konfiguration</h2>
+    <form action="/save-config" method="post" class="space-y-8">
+        <div>
+            <h3 class="text-xl font-bold text-blue-400 mb-4">Sonarr</h3>
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Instanz A (Hier wird gelöscht)</label>
+                    <input type="text" name="sonarr_a_url" placeholder="URL" value="{{sonarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input type="password" name="sonarr_a_api" placeholder="API Key" value="{{sonarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                </div>
+                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Instanz B (Referenz)</label>
+                    <input type="text" name="sonarr_b_url" placeholder="URL" value="{{sonarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input type="password" name="sonarr_b_api" placeholder="API Key" value="{{sonarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                </div>
+            </div>
         </div>
-        <!-- Spalte B -->
-        <div class="space-y-4">
-            <h3 class="text-purple-400 font-semibold border-b border-gray-700 pb-2">Instanz B</h3>
-            <input type="text" name="sonarr_b_url" placeholder="Sonarr B URL" value="{{sonarr_b_url}}" class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
-            <input type="password" name="sonarr_b_api" placeholder="Sonarr B API" value="{{sonarr_b_api}}" class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+        <div>
+            <h3 class="text-xl font-bold text-yellow-400 mb-4">Radarr</h3>
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Instanz A (Hier wird gelöscht)</label>
+                    <input type="text" name="radarr_a_url" placeholder="URL" value="{{radarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input type="password" name="radarr_a_api" placeholder="API Key" value="{{radarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                </div>
+                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Instanz B (Referenz)</label>
+                    <input type="text" name="radarr_b_url" placeholder="URL" value="{{radarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input type="password" name="radarr_b_api" placeholder="API Key" value="{{radarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                </div>
+            </div>
         </div>
-        <button type="submit" class="col-span-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-[1.01]">Konfiguration Speichern</button>
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1">Speichern</button>
     </form>
 </div>
