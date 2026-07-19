@@ -1,9 +1,12 @@
-# 🚀 Arr Stack Manager
+# 🚀 Arr Duplicate Manager
 
-Arr Stack Manager is a lightweight web dashboard that checks two instances of
+Arr Duplicate Manager is a lightweight web dashboard that checks two instances of
 the same application for duplicate content. It compares Sonarr A with Sonarr B
 and Radarr A with Radarr B, then shows series or movies that exist in both
 instances. Duplicates can be removed from the configured primary instance.
+
+The existing image, Compose service, and container identifiers remain
+`arr-stack-manager` for compatibility with current installations.
 
 ## What the application compares
 
@@ -162,7 +165,7 @@ socket mount is required.
 To configure notifications:
 
 1. Create a webhook in the desired Discord channel.
-2. Open **Settings** in Arr Stack Manager.
+2. Open **Settings** in Arr Duplicate Manager.
 3. Enable **Discord notifications** and paste the webhook URL.
 4. Select a daily, weekly, or monthly schedule and the report time.
 5. Use **Send test report** to verify the webhook and Arr connections.
@@ -254,7 +257,7 @@ ports:
 - Verify the URL and API key in Settings.
 - Make sure the URL is reachable from inside Docker.
 - Do not use `localhost` for another container or host service unless the
-  service actually runs inside the Arr Stack Manager container.
+  service actually runs inside the Arr Duplicate Manager container.
 - When services share a Docker network, use their Compose service names.
 
 ### Configuration is lost after an update

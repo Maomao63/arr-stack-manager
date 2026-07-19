@@ -300,7 +300,7 @@ def format_report_section(label, titles):
 
 def create_duplicate_report(config):
     lines = [
-        "**Arr Stack Manager duplicate report**",
+        "**Arr Duplicate Manager report**",
         datetime.now().strftime("%Y-%m-%d %H:%M"),
         "",
     ]
