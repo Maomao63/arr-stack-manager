@@ -26,6 +26,7 @@ Instance B is only used as the comparison reference and is not modified.
 - Show the file and episode status of matching items
 - Remove items and their files from the configured primary instance
 - Keep a history of the last 100 deletions
+- Send optional scheduled duplicate reports to Discord
 - Store all persistent data in a freely selectable host directory
 - Run as a small Docker container based on Python Slim
 
@@ -40,6 +41,7 @@ The selected host directory will contain:
 | --- | --- |
 | `config.json` | Sonarr/Radarr URLs and API keys |
 | `history.json` | The last 100 deletion events |
+| `notification_state.json` | Last scheduled Discord notification attempt |
 
 Recreating or updating the container does not remove these files as long as the
 same host directory is mounted to `/config`.
@@ -139,6 +141,35 @@ docker compose config
 Instance A is the primary instance from which items can be deleted. Instance B
 is used as the comparison reference. The container must be able to reach the
 URLs entered in Settings.
+
+## Discord notifications
+
+Discord reports are optional and disabled by default. They run inside the
+application container, so no host cron job, additional Python script, or Docker
+socket mount is required.
+
+To configure notifications:
+
+1. Create a webhook in the desired Discord channel.
+2. Open **Settings** in Arr Stack Manager.
+3. Enable **Discord notifications** and paste the webhook URL.
+4. Select a daily, weekly, or monthly schedule and the report time.
+5. Use **Send test report** to verify the webhook and Arr connections.
+6. Save the configuration.
+
+The report checks both Sonarr and Radarr. It lists duplicates when they are
+found and explicitly reports **No duplicates found** when an application has no
+matching items. Applications without complete connection settings are shown as
+not configured.
+
+Daily reports run every day at the selected time. Weekly reports also use the
+selected weekday. Monthly reports use a selectable day from 1 through 28 so the
+schedule remains valid in every month. Scheduling uses the container timezone
+configured through `TZ` in Compose.
+
+The scheduler records its most recent attempt in `notification_state.json` to
+avoid duplicate reports after a container restart. The test button sends a
+report immediately and works independently of the enabled switch.
 
 ## Updating
 
@@ -250,4 +281,6 @@ code included in the image.
 
 The current application does not provide user authentication. Keep it on a
 trusted private network or protect it with an authenticated reverse proxy. Do
-not expose it directly to the public internet.
+not expose it directly to the public internet. API keys and the Discord webhook
+are stored in `config.json`; restrict access to the persistent config directory
+and never publish that file.

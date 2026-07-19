@@ -3,7 +3,7 @@
     <form action="/save-config" method="post" class="space-y-8">
         <div>
             <h3 class="text-xl font-bold text-blue-400 mb-4">Sonarr</h3>
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
                     <input type="text" name="sonarr_a_url" placeholder="URL" value="{{sonarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
@@ -18,7 +18,7 @@
         </div>
         <div>
             <h3 class="text-xl font-bold text-yellow-400 mb-4">Radarr</h3>
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
                     <input type="text" name="radarr_a_url" placeholder="URL" value="{{radarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
@@ -31,6 +31,81 @@
                 </div>
             </div>
         </div>
+
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-indigo-500/20 space-y-6">
+            <div class="flex items-center justify-between gap-6">
+                <div>
+                    <h3 class="text-xl font-bold text-indigo-400">Discord notifications</h3>
+                    <p class="text-sm text-slate-400 mt-1">Receive a scheduled report for Sonarr and Radarr duplicates.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="discord-enabled" type="checkbox" name="discord_enabled" value="true" class="sr-only peer" {% if discord_enabled %}checked{% endif %} onchange="updateDiscordSettings()">
+                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-indigo-600 peer-focus:ring-2 peer-focus:ring-indigo-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
+                </label>
+            </div>
+
+            <div id="discord-settings" class="space-y-5">
+                <div>
+                    <label for="discord-webhook" class="block text-xs font-bold text-slate-400 uppercase mb-2">Discord webhook URL</label>
+                    <input id="discord-webhook" type="password" name="discord_webhook" placeholder="https://discord.com/api/webhooks/..." value="{{ discord_webhook }}" autocomplete="off" class="w-full bg-black/40 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
+                    <p class="text-xs text-slate-500 mt-2">The webhook is stored in your persistent config directory.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="discord-frequency" class="block text-xs font-bold text-slate-400 uppercase mb-2">Frequency</label>
+                        <select id="discord-frequency" name="discord_frequency" onchange="updateDiscordSchedule()" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
+                            <option value="daily" {% if discord_frequency == "daily" %}selected{% endif %}>Daily</option>
+                            <option value="weekly" {% if discord_frequency == "weekly" %}selected{% endif %}>Weekly</option>
+                            <option value="monthly" {% if discord_frequency == "monthly" %}selected{% endif %}>Monthly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="discord-time" class="block text-xs font-bold text-slate-400 uppercase mb-2">Report time</label>
+                        <input id="discord-time" type="time" name="discord_time" value="{{ discord_time }}" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
+                    </div>
+                    <div id="discord-weekday-wrapper">
+                        <label for="discord-weekday" class="block text-xs font-bold text-slate-400 uppercase mb-2">Day of the week</label>
+                        <select id="discord-weekday" name="discord_weekday" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
+                            <option value="0" {% if discord_weekday == "0" %}selected{% endif %}>Monday</option>
+                            <option value="1" {% if discord_weekday == "1" %}selected{% endif %}>Tuesday</option>
+                            <option value="2" {% if discord_weekday == "2" %}selected{% endif %}>Wednesday</option>
+                            <option value="3" {% if discord_weekday == "3" %}selected{% endif %}>Thursday</option>
+                            <option value="4" {% if discord_weekday == "4" %}selected{% endif %}>Friday</option>
+                            <option value="5" {% if discord_weekday == "5" %}selected{% endif %}>Saturday</option>
+                            <option value="6" {% if discord_weekday == "6" %}selected{% endif %}>Sunday</option>
+                        </select>
+                    </div>
+                    <div id="discord-monthday-wrapper">
+                        <label for="discord-monthday" class="block text-xs font-bold text-slate-400 uppercase mb-2">Day of the month</label>
+                        <input id="discord-monthday" type="number" name="discord_monthday" min="1" max="28" value="{{ discord_monthday }}" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <button type="button" hx-post="/test-discord" hx-include="closest form" hx-target="#discord-test-result" hx-swap="innerHTML" class="bg-indigo-500/10 hover:bg-indigo-600 hover:text-white text-indigo-400 border border-indigo-500/30 px-5 py-2.5 rounded-xl font-bold transition-all">Send test report</button>
+                    <div id="discord-test-result" class="text-sm"></div>
+                </div>
+            </div>
+        </div>
+
         <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1">Save</button>
     </form>
 </div>
+
+<script>
+    function updateDiscordSettings() {
+        const enabled = document.getElementById('discord-enabled').checked;
+        document.getElementById('discord-settings').classList.toggle('hidden', !enabled);
+    }
+
+    function updateDiscordSchedule() {
+        const frequency = document.getElementById('discord-frequency').value;
+        document.getElementById('discord-weekday-wrapper').classList.toggle('hidden', frequency !== 'weekly');
+        document.getElementById('discord-monthday-wrapper').classList.toggle('hidden', frequency !== 'monthly');
+    }
+
+    updateDiscordSettings();
+    updateDiscordSchedule();
+</script>
