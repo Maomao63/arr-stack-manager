@@ -6,12 +6,13 @@ import os
 import re
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import quote, urlparse
 
 import requests
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
@@ -229,6 +230,97 @@ def log_history(app_type, title):
     save_json(HISTORY_FILE, history[:100])
 
 
+def load_history(limit=None):
+    history = load_json(HISTORY_FILE, [])
+    if not isinstance(history, list):
+        return []
+    return history[:limit] if limit is not None else history
+
+
+def discord_schedule_label(config):
+    if not config.get("discord_enabled"):
+        return "Notifications disabled"
+    schedule_time = config.get("discord_time", "09:00")
+    frequency = config.get("discord_frequency", "daily")
+    if frequency == "weekly":
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        weekday = min(6, max(0, int(config.get("discord_weekday", 0))))
+        return f"Every {weekdays[weekday]} at {schedule_time}"
+    if frequency == "monthly":
+        monthday = min(28, max(1, int(config.get("discord_monthday", 1))))
+        return f"Monthly on day {monthday} at {schedule_time}"
+    return f"Daily at {schedule_time}"
+
+
+def next_discord_report(config, now=None):
+    if not config.get("discord_enabled") or not config.get("discord_webhook"):
+        return None
+    now = now or datetime.now()
+    try:
+        hour, minute = (int(part) for part in config.get("discord_time", "09:00").split(":"))
+    except (TypeError, ValueError):
+        return None
+    frequency = config.get("discord_frequency", "daily")
+    candidate = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if frequency == "daily":
+        if candidate <= now:
+            candidate += timedelta(days=1)
+    elif frequency == "weekly":
+        weekday = min(6, max(0, int(config.get("discord_weekday", 0))))
+        days_ahead = (weekday - now.weekday()) % 7
+        candidate += timedelta(days=days_ahead)
+        if candidate <= now:
+            candidate += timedelta(days=7)
+    elif frequency == "monthly":
+        monthday = min(28, max(1, int(config.get("discord_monthday", 1))))
+        candidate = candidate.replace(day=monthday)
+        if candidate <= now:
+            year = now.year + (1 if now.month == 12 else 0)
+            month = 1 if now.month == 12 else now.month + 1
+            candidate = candidate.replace(year=year, month=month, day=monthday)
+    else:
+        return None
+    return candidate.strftime("%a, %d %b at %H:%M")
+
+
+def home_context():
+    config = load_config()
+    return {
+        **config,
+        "recent_history": load_history(5),
+        "discord_schedule": discord_schedule_label(config),
+        "next_discord_report": next_discord_report(config),
+    }
+
+
+def dashboard_app_status(app_type, config):
+    enabled_key = f"{app_type}_enabled"
+    if not config.get(enabled_key, True):
+        return {"enabled": False, "state": "disabled", "duplicate_count": 0}
+
+    required = [
+        config.get(f"{app_type}_a_url"),
+        config.get(f"{app_type}_a_api"),
+        config.get(f"{app_type}_b_url"),
+        config.get(f"{app_type}_b_api"),
+    ]
+    if not all(required):
+        return {"enabled": True, "state": "unconfigured", "duplicate_count": 0}
+
+    try:
+        if app_type == "sonarr":
+            duplicates = get_sonarr_duplicate_titles(config)
+        else:
+            duplicates = get_radarr_duplicate_titles(config)
+    except (requests.RequestException, ValueError):
+        return {"enabled": True, "state": "error", "duplicate_count": 0}
+    return {
+        "enabled": True,
+        "state": "connected",
+        "duplicate_count": len(duplicates or []),
+    }
+
+
 def is_valid_discord_webhook(webhook_url):
     try:
         parsed = urlparse(webhook_url)
@@ -426,14 +518,37 @@ async def lifespan(_app):
 
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
+    context = home_context()
     return HTMLResponse(
         content=env.get_template("index.html").render(
-            load_config(),
+            context,
             app_version=APP_VERSION,
+        )
+    )
+
+
+@app.get("/home", response_class=HTMLResponse)
+async def home_page():
+    return HTMLResponse(content=env.get_template("home.html").render(home_context()))
+
+
+@app.get("/dashboard-data", response_class=HTMLResponse)
+async def dashboard_data():
+    config = load_config()
+    sonarr, radarr = await asyncio.gather(
+        asyncio.to_thread(dashboard_app_status, "sonarr", config),
+        asyncio.to_thread(dashboard_app_status, "radarr", config),
+    )
+    return HTMLResponse(
+        content=env.get_template("dashboard_data.html").render(
+            sonarr=sonarr,
+            radarr=radarr,
+            checked_at=datetime.now().strftime("%H:%M:%S"),
         )
     )
 
@@ -447,7 +562,7 @@ async def version_status():
         return HTMLResponse(
             "<a href='https://github.com/Maomao63/arr-stack-manager' "
             "target='_blank' rel='noopener noreferrer' "
-            "class='text-amber-400 hover:text-amber-300 font-semibold'>"
+            "class='update-link'>"
             f"Update available: v{latest_version} — pull the latest image and redeploy"
             "</a>"
         )
@@ -461,7 +576,7 @@ async def settings_page():
 
 @app.get("/history", response_class=HTMLResponse)
 async def history_page():
-    history = load_json(HISTORY_FILE, [])
+    history = load_history()
     return HTMLResponse(content=env.get_template("history.html").render(history=history))
 
 
@@ -469,11 +584,11 @@ async def history_page():
 async def sonarr_data():
     config = load_config()
     if not config.get("sonarr_enabled", True):
-        return HTMLResponse("<div class='text-slate-400'>Sonarr is disabled in Settings.</div>")
+        return HTMLResponse("<div class='notice notice-muted'>Sonarr is disabled in Settings.</div>")
     series_a = fetch_api(config["sonarr_a_url"], config["sonarr_a_api"], "series")
     series_b = fetch_api(config["sonarr_b_url"], config["sonarr_b_api"], "series")
     if not series_a or not series_b:
-        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Unable to connect to Sonarr. Check your settings.</div>")
+        return HTMLResponse("<div class='notice notice-error'>Unable to connect to Sonarr. Check your settings.</div>")
 
     dict_b = {series.get("tvdbId"): series for series in series_b if series.get("tvdbId")}
     duplicates = []
@@ -509,11 +624,11 @@ async def sonarr_data():
 async def radarr_data():
     config = load_config()
     if not config.get("radarr_enabled", True):
-        return HTMLResponse("<div class='text-slate-400'>Radarr is disabled in Settings.</div>")
+        return HTMLResponse("<div class='notice notice-muted'>Radarr is disabled in Settings.</div>")
     movies_a = fetch_api(config["radarr_a_url"], config["radarr_a_api"], "movie")
     movies_b = fetch_api(config["radarr_b_url"], config["radarr_b_api"], "movie")
     if not movies_a or not movies_b:
-        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Unable to connect to Radarr. Check your settings.</div>")
+        return HTMLResponse("<div class='notice notice-error'>Unable to connect to Radarr. Check your settings.</div>")
 
     dict_b = {movie.get("tmdbId"): movie for movie in movies_b if movie.get("tmdbId")}
     duplicates = []
@@ -539,19 +654,19 @@ async def delete_item(app_type: str, item_id: int, title: str = "Unknown"):
     config = load_config()
     if app_type == "sonarr":
         if not config.get("sonarr_enabled", True):
-            return HTMLResponse("<div class='text-red-400'>Sonarr is disabled in Settings.</div>", status_code=400)
+            return HTMLResponse("<div class='notice notice-error'>Sonarr is disabled in Settings.</div>", status_code=400)
         url, api_key, endpoint = config["sonarr_a_url"], config["sonarr_a_api"], "series"
     elif app_type == "radarr":
         if not config.get("radarr_enabled", True):
-            return HTMLResponse("<div class='text-red-400'>Radarr is disabled in Settings.</div>", status_code=400)
+            return HTMLResponse("<div class='notice notice-error'>Radarr is disabled in Settings.</div>", status_code=400)
         url, api_key, endpoint = config["radarr_a_url"], config["radarr_a_api"], "movie"
     else:
-        return HTMLResponse("<div class='text-red-400'>Unsupported application</div>", status_code=400)
+        return HTMLResponse("<div class='notice notice-error'>Unsupported application</div>", status_code=400)
     if delete_api(url, api_key, endpoint, item_id):
         log_history(app_type, title)
         safe_title = html.escape(title)
-        return HTMLResponse(f"<div class='text-green-400 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20'>Successfully deleted: {safe_title}</div>")
-    return HTMLResponse("<div class='text-red-400 font-bold bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20'>Failed to delete item</div>")
+        return HTMLResponse(f"<div class='notice notice-success'>Successfully deleted: {safe_title}</div>")
+    return HTMLResponse("<div class='notice notice-error'>Failed to delete item</div>")
 
 
 @app.post("/save-config")
@@ -569,21 +684,21 @@ async def test_discord(request: Request):
         await asyncio.to_thread(send_duplicate_report, config)
     except (requests.RequestException, ValueError) as error:
         return HTMLResponse(
-            f"<div class='text-red-400 font-semibold'>Discord test failed: {html.escape(str(error))}</div>"
+            f"<span class='status-text status-error'>Discord test failed: {html.escape(str(error))}</span>"
         )
     return HTMLResponse(
-        "<div class='text-emerald-400 font-semibold'>Discord test report sent successfully.</div>"
+        "<span class='status-text status-success'>Discord test report sent successfully.</span>"
     )
 
 
 @app.post("/test-arr-connection/{app_type}/{instance}", response_class=HTMLResponse)
 async def test_connection(app_type: str, instance: str, request: Request):
     if app_type not in {"sonarr", "radarr"} or instance not in {"a", "b"}:
-        return HTMLResponse("<span class='text-red-400 font-semibold'>Connection failed</span>")
+        return HTMLResponse("<span class='status-text status-error'>Connection failed</span>")
     form = await request.form()
     url = str(form.get(f"{app_type}_{instance}_url", "")).strip()
     api_key = str(form.get(f"{app_type}_{instance}_api", "")).strip()
     connected = await asyncio.to_thread(test_arr_connection, url, api_key)
     if connected:
-        return HTMLResponse("<span class='text-emerald-400 font-semibold'>Connected</span>")
-    return HTMLResponse("<span class='text-red-400 font-semibold'>Connection failed</span>")
+        return HTMLResponse("<span class='status-text status-success'>Connected</span>")
+    return HTMLResponse("<span class='status-text status-error'>Connection failed</span>")

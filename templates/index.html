@@ -1,43 +1,90 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="ocean">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
     <title>Arr Duplicate Manager v{{ app_version }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org"></script>
+    <script>
+        try {
+            document.documentElement.dataset.theme = localStorage.getItem('adm-theme') || 'ocean';
+        } catch (_) {}
+    </script>
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="https://unpkg.com/htmx.org" defer></script>
+    <script src="/static/app.js" defer></script>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0f172a] to-black antialiased">
-    <nav class="border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-            <span class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Arr Duplicate Manager</span>
-            <div class="flex space-x-2 bg-slate-800/50 p-1.5 rounded-2xl border border-white/5">
-                {% if sonarr_enabled %}
-                <button hx-get="/sonarr-data" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-blue-500/20 rounded-xl transition-all">Sonarr</button>
-                {% endif %}
-                {% if radarr_enabled %}
-                <button hx-get="/radarr-data" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-yellow-500/20 rounded-xl transition-all">Radarr</button>
-                {% endif %}
-                <button hx-get="/history" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all">History</button>
-                <button hx-get="/settings" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-white/10 rounded-xl transition-all">Settings</button>
+<body>
+    <header class="app-header">
+        <div class="shell header-inner">
+            <button class="brand" type="button" hx-get="/home" hx-target="#content" data-nav="home" aria-label="Open dashboard">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M7 7.5A3.5 3.5 0 0 1 10.5 4h3A3.5 3.5 0 0 1 17 7.5V9h1.5A2.5 2.5 0 0 1 21 11.5v5A3.5 3.5 0 0 1 17.5 20h-11A3.5 3.5 0 0 1 3 16.5v-5A2.5 2.5 0 0 1 5.5 9H7V7.5Zm2 0V9h6V7.5A1.5 1.5 0 0 0 13.5 6h-3A1.5 1.5 0 0 0 9 7.5ZM7.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/></svg>
+                </span>
+                <span class="brand-copy">
+                    <strong>Arr Duplicate Manager</strong>
+                    <small>Instance cleaner</small>
+                </span>
+            </button>
+
+            <div class="header-actions">
+                <nav class="app-nav" aria-label="Main navigation">
+                    <button type="button" class="nav-link is-active" hx-get="/home" hx-target="#content" data-nav="home">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10.8 9-7.2 9 7.2v8.7a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 19.5v-8.7Z"/></svg>
+                        <span>Home</span>
+                    </button>
+                    {% if sonarr_enabled %}
+                    <button type="button" class="nav-link" hx-get="/sonarr-data" hx-target="#content" data-nav="sonarr">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H13v2h3v2H8v-2h3v-2H6.5A2.5 2.5 0 0 1 4 13.5v-8Zm2 0v8c0 .3.2.5.5.5h11c.3 0 .5-.2.5-.5v-8c0-.3-.2-.5-.5-.5h-11c-.3 0-.5.2-.5.5Z"/></svg>
+                        <span>Sonarr</span>
+                    </button>
+                    {% endif %}
+                    {% if radarr_enabled %}
+                    <button type="button" class="nav-link" hx-get="/radarr-data" hx-target="#content" data-nav="radarr">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v3h3L6 5H5Zm5 0 2 3h3l-2-3h-3Zm5 0 2 3h2V5h-4ZM5 10v9h14v-9H5Z"/></svg>
+                        <span>Radarr</span>
+                    </button>
+                    {% endif %}
+                    <button type="button" class="nav-link" hx-get="/history" hx-target="#content" data-nav="history">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.4 5H2l3.5-4L9 9H6.7A6 6 0 1 0 12 6V4Zm1 3v4.6l3.2 1.9-1 1.7-4.2-2.5V7h2Z"/></svg>
+                        <span>History</span>
+                    </button>
+                    <button type="button" class="nav-link" hx-get="/settings" hx-target="#content" data-nav="settings">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.8 2h2.4l.5 2.1c.5.2 1 .4 1.4.8l2-.7 1.7 1.7-.7 2c.3.4.6.9.8 1.4l2.1.5v2.4l-2.1.5c-.2.5-.4 1-.8 1.4l.7 2-1.7 1.7-2-.7c-.4.3-.9.6-1.4.8l-.5 2.1h-2.4l-.5-2.1c-.5-.2-1-.4-1.4-.8l-2 .7-1.7-1.7.7-2c-.3-.4-.6-.9-.8-1.4L3 12.2V9.8l2.1-.5c.2-.5.4-1 .8-1.4l-.7-2 1.7-1.7 2 .7c.4-.3.9-.6 1.4-.8L10.8 2Zm1.2 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+                        <span>Settings</span>
+                    </button>
+                </nav>
+
+                <div class="theme-picker">
+                    <button id="theme-toggle" class="icon-button theme-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="theme-menu" title="Choose theme">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18h1.4a1.8 1.8 0 0 0 1.2-3.1 1.7 1.7 0 0 1 1.1-3h1.8A3.5 3.5 0 0 0 21 11.4 8.5 8.5 0 0 0 12 3ZM7.5 10A1.5 1.5 0 1 1 7.5 7a1.5 1.5 0 0 1 0 3Zm3-3A1.5 1.5 0 1 1 13.5 7a1.5 1.5 0 0 1-3 0Zm-5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/></svg>
+                    </button>
+                    <div id="theme-menu" class="theme-menu" role="menu" hidden>
+                        <div class="theme-menu-heading">
+                            <strong>Appearance</strong>
+                            <span>Choose a color preset</span>
+                        </div>
+                        <div class="theme-options">
+                            {% for theme_id, theme_name in [('ocean', 'Ocean'), ('aurora', 'Aurora'), ('ember', 'Ember'), ('forest', 'Forest'), ('rose', 'Rose'), ('graphite', 'Graphite')] %}
+                            <button type="button" class="theme-option" data-theme-option="{{ theme_id }}" role="menuitemradio" aria-checked="false">
+                                <span class="theme-swatch swatch-{{ theme_id }}" aria-hidden="true"><i></i><i></i><i></i></span>
+                                <span>{{ theme_name }}</span>
+                                <svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
-    <main id="content" class="p-8 w-full max-w-7xl mx-auto mt-8 flex-1">
-        <div class="text-center mt-32 space-y-4">
-            <h2 class="text-5xl font-extrabold tracking-tight">Welcome</h2>
-            {% if sonarr_enabled and radarr_enabled %}
-            <p class="text-slate-400 text-xl">Select Sonarr or Radarr above to find duplicates across your instances.</p>
-            {% elif sonarr_enabled %}
-            <p class="text-slate-400 text-xl">Select Sonarr above to find duplicates across your instances.</p>
-            {% elif radarr_enabled %}
-            <p class="text-slate-400 text-xl">Select Radarr above to find duplicates across your instances.</p>
-            {% else %}
-            <p class="text-slate-400 text-xl">Enable Sonarr or Radarr in Settings to get started.</p>
-            {% endif %}
-        </div>
+    </header>
+
+    <main id="content" class="shell app-main">
+        {% include "home.html" %}
     </main>
-    <footer class="w-full border-t border-white/5 bg-slate-950/40 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
+
+    <footer class="app-footer">
+        <div class="shell footer-inner">
             <span>Arr Duplicate Manager v{{ app_version }}</span>
             <span id="version-status" hx-get="/version-status" hx-trigger="load, every 6h" hx-swap="innerHTML"></span>
         </div>

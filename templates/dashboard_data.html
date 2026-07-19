@@ -1,0 +1,41 @@
+{% for app_name, app in [('Sonarr', sonarr), ('Radarr', radarr)] %}
+<article class="integration-card integration-{{ app_name|lower }} state-{{ app.state }}">
+    <div class="integration-card-top">
+        <span class="integration-icon">
+            {% if app_name == 'Sonarr' %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H13v2h3v2H8v-2h3v-2H6.5A2.5 2.5 0 0 1 4 13.5v-8Z"/></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 7v9h14v-9H5Zm1-5 2 3h3L9 5H6Zm5 0 2 3h3l-2-3h-3Z"/></svg>
+            {% endif %}
+        </span>
+        <span class="status-pill {% if app.state == 'connected' %}status-success{% elif app.state == 'error' %}status-error{% else %}status-neutral{% endif %}">
+            <i></i>
+            {% if app.state == 'connected' %}Connected{% elif app.state == 'error' %}Connection issue{% elif app.state == 'unconfigured' %}Setup required{% else %}Disabled{% endif %}
+        </span>
+    </div>
+    <div class="integration-card-copy">
+        <span>{{ app_name }}</span>
+        {% if app.state == 'connected' %}
+        <strong>{{ app.duplicate_count }}</strong>
+        <p>{% if app.duplicate_count == 1 %}duplicate ready to review{% else %}duplicates ready to review{% endif %}</p>
+        {% elif app.state == 'error' %}
+        <strong class="compact-value">Unavailable</strong>
+        <p>One or both instances could not be reached.</p>
+        {% elif app.state == 'unconfigured' %}
+        <strong class="compact-value">Not configured</strong>
+        <p>Add both instance URLs and API keys.</p>
+        {% else %}
+        <strong class="compact-value">Turned off</strong>
+        <p>Enable this integration when you need it.</p>
+        {% endif %}
+    </div>
+    <div class="integration-card-footer">
+        {% if app.state == 'connected' %}
+        <button type="button" class="text-button" hx-get="/{{ app_name|lower }}-data" hx-target="#content" data-nav="{{ app_name|lower }}">Review {{ app_name }} duplicates <span>→</span></button>
+        {% else %}
+        <button type="button" class="text-button" hx-get="/settings" hx-target="#content" data-nav="settings">Open Settings <span>→</span></button>
+        {% endif %}
+        <small>Checked {{ checked_at }}</small>
+    </div>
+</article>
+{% endfor %}

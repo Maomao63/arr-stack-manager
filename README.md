@@ -28,6 +28,9 @@ Instance B is only used as the comparison reference and is not modified.
 - Check two Radarr instances for duplicate movies by TMDB ID
 - Enable only the Sonarr and Radarr integrations you use
 - Test every URL and API key directly from Settings
+- Use a compact Home dashboard with connection state, duplicate counts, recent
+  activity, and the next Discord report
+- Choose from six built-in color themes saved locally in the browser
 - Show the file and episode status of matching items
 - Remove items and their files from the configured primary instance
 - Keep a history of the last 100 deletions
@@ -184,6 +187,25 @@ configured through `TZ` in Compose.
 The scheduler records its most recent attempt in `notification_state.json` to
 avoid duplicate reports after a container restart. The test button sends a
 report immediately and works independently of the enabled switch.
+
+## Home dashboard and themes
+
+The Home dashboard loads immediately and checks enabled Sonarr and Radarr
+integrations in the background. It shows connection state, current duplicate
+counts, recent deletion activity, and the configured Discord schedule. Use
+**Scan all now** to refresh both integration cards on demand.
+
+The palette button in the upper-right corner offers six presets:
+
+- **Ocean** - the original blue palette and current default
+- **Aurora** - violet with teal accents
+- **Ember** - warm orange and amber
+- **Forest** - emerald and lime
+- **Rose** - rose and magenta
+- **Graphite** - neutral monochrome with a gold accent
+
+Theme selection is stored in the browser and does not modify `config.json`, so
+different users or browsers can choose their own appearance independently.
 
 ## Updating
 

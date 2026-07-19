@@ -1,148 +1,110 @@
-<div class="max-w-4xl mx-auto bg-slate-800/40 p-8 rounded-3xl border border-white/10 shadow-2xl">
-    <h2 class="text-3xl mb-8 font-extrabold text-white">Configuration</h2>
-    <form action="/save-config" method="post" class="space-y-8">
+<section class="page settings-page">
+    <div class="page-header">
         <div>
-            <div class="flex items-center justify-between gap-6 mb-4">
-                <h3 class="text-xl font-bold text-blue-400">Sonarr</h3>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input id="sonarr-enabled" type="checkbox" name="sonarr_enabled" value="true" class="sr-only peer" {% if sonarr_enabled %}checked{% endif %} onchange="updateApplicationSettings('sonarr')">
-                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
-                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
-                </label>
-            </div>
-            <div id="sonarr-settings" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
-                    <input id="sonarr-a-url" type="text" name="sonarr_a_url" placeholder="URL" value="{{sonarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <input id="sonarr-a-api" type="password" name="sonarr_a_api" placeholder="API Key" value="{{sonarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <div class="flex items-center gap-3">
-                        <button type="button" hx-post="/test-arr-connection/sonarr/a" hx-include="#sonarr-a-url, #sonarr-a-api" hx-target="#sonarr-a-result" class="bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
-                        <span id="sonarr-a-result" class="text-sm"></span>
-                    </div>
-                </div>
-                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Instance B (reference)</label>
-                    <input id="sonarr-b-url" type="text" name="sonarr_b_url" placeholder="URL" value="{{sonarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <input id="sonarr-b-api" type="password" name="sonarr_b_api" placeholder="API Key" value="{{sonarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <div class="flex items-center gap-3">
-                        <button type="button" hx-post="/test-arr-connection/sonarr/b" hx-include="#sonarr-b-url, #sonarr-b-api" hx-target="#sonarr-b-result" class="bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
-                        <span id="sonarr-b-result" class="text-sm"></span>
-                    </div>
-                </div>
-            </div>
+            <span class="eyebrow">Configuration</span>
+            <h1>Settings</h1>
+            <p>Connect your instances and choose how reports should run.</p>
         </div>
-        <div>
-            <div class="flex items-center justify-between gap-6 mb-4">
-                <h3 class="text-xl font-bold text-yellow-400">Radarr</h3>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input id="radarr-enabled" type="checkbox" name="radarr_enabled" value="true" class="sr-only peer" {% if radarr_enabled %}checked{% endif %} onchange="updateApplicationSettings('radarr')">
-                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-yellow-600 peer-focus:ring-2 peer-focus:ring-yellow-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
-                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
-                </label>
-            </div>
-            <div id="radarr-settings" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
-                    <input id="radarr-a-url" type="text" name="radarr_a_url" placeholder="URL" value="{{radarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <input id="radarr-a-api" type="password" name="radarr_a_api" placeholder="API Key" value="{{radarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <div class="flex items-center gap-3">
-                        <button type="button" hx-post="/test-arr-connection/radarr/a" hx-include="#radarr-a-url, #radarr-a-api" hx-target="#radarr-a-result" class="bg-yellow-500/10 hover:bg-yellow-600 hover:text-white text-yellow-400 border border-yellow-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
-                        <span id="radarr-a-result" class="text-sm"></span>
-                    </div>
-                </div>
-                <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Instance B (reference)</label>
-                    <input id="radarr-b-url" type="text" name="radarr_b_url" placeholder="URL" value="{{radarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <input id="radarr-b-api" type="password" name="radarr_b_api" placeholder="API Key" value="{{radarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <div class="flex items-center gap-3">
-                        <button type="button" hx-post="/test-arr-connection/radarr/b" hx-include="#radarr-b-url, #radarr-b-api" hx-target="#radarr-b-result" class="bg-yellow-500/10 hover:bg-yellow-600 hover:text-white text-yellow-400 border border-yellow-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
-                        <span id="radarr-b-result" class="text-sm"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+    </div>
 
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-indigo-500/20 space-y-6">
-            <div class="flex items-center justify-between gap-6">
-                <div>
-                    <h3 class="text-xl font-bold text-indigo-400">Discord notifications</h3>
-                    <p class="text-sm text-slate-400 mt-1">Receive a scheduled report for Sonarr and Radarr duplicates.</p>
+    <form action="/save-config" method="post" class="settings-form">
+        {% for app_name, app_color in [('Sonarr', 'sonarr'), ('Radarr', 'radarr')] %}
+        {% set app_key = app_name|lower %}
+        {% set app_enabled = sonarr_enabled if app_key == 'sonarr' else radarr_enabled %}
+        <section class="settings-section app-settings-{{ app_color }}">
+            <div class="section-heading">
+                <div class="section-title-group">
+                    <span class="section-icon section-icon-{{ app_color }}">{{ app_name[0] }}</span>
+                    <div><h2>{{ app_name }}</h2><p>Compare two {{ app_name }} instances for matching titles.</p></div>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input id="discord-enabled" type="checkbox" name="discord_enabled" value="true" class="sr-only peer" {% if discord_enabled %}checked{% endif %} onchange="updateDiscordSettings()">
-                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-indigo-600 peer-focus:ring-2 peer-focus:ring-indigo-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
-                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
+                <label class="switch">
+                    <input id="{{ app_key }}-enabled" type="checkbox" name="{{ app_key }}_enabled" value="true" {% if app_enabled %}checked{% endif %} data-controls="{{ app_key }}-settings">
+                    <span class="switch-track"><i></i></span>
+                    <span>Enabled</span>
                 </label>
             </div>
 
-            <div id="discord-settings" class="space-y-5">
-                <div>
-                    <label for="discord-webhook" class="block text-xs font-bold text-slate-400 uppercase mb-2">Discord webhook URL</label>
-                    <input id="discord-webhook" type="password" name="discord_webhook" placeholder="https://discord.com/api/webhooks/..." value="{{ discord_webhook }}" autocomplete="off" class="w-full bg-black/40 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
-                    <p class="text-xs text-slate-500 mt-2">The webhook is stored in your persistent config directory.</p>
+            <div id="{{ app_key }}-settings" class="instance-grid">
+                {% for instance, description in [('a', 'Primary · items are deleted here'), ('b', 'Reference · never modified')] %}
+                <div class="instance-card">
+                    <div class="instance-card-heading">
+                        <div><span class="instance-label">Instance {{ instance|upper }}</span><small>{{ description }}</small></div>
+                        <span id="{{ app_key }}-{{ instance }}-result" class="connection-result"></span>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="{{ app_key }}-{{ instance }}-url">Server URL</label>
+                        <input class="input" id="{{ app_key }}-{{ instance }}-url" type="url" name="{{ app_key }}_{{ instance }}_url" placeholder="http://{{ app_key }}:{{ '8989' if app_key == 'sonarr' else '7878' }}" value="{{ sonarr_a_url if app_key == 'sonarr' and instance == 'a' else sonarr_b_url if app_key == 'sonarr' else radarr_a_url if instance == 'a' else radarr_b_url }}">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="{{ app_key }}-{{ instance }}-api">API key</label>
+                        <input class="input" id="{{ app_key }}-{{ instance }}-api" type="password" name="{{ app_key }}_{{ instance }}_api" placeholder="Paste API key" autocomplete="off" value="{{ sonarr_a_api if app_key == 'sonarr' and instance == 'a' else sonarr_b_api if app_key == 'sonarr' else radarr_a_api if instance == 'a' else radarr_b_api }}">
+                    </div>
+                    <button type="button" class="button button-secondary button-small" hx-post="/test-arr-connection/{{ app_key }}/{{ instance }}" hx-include="#{{ app_key }}-{{ instance }}-url, #{{ app_key }}-{{ instance }}-api" hx-target="#{{ app_key }}-{{ instance }}-result" hx-indicator="#{{ app_key }}-{{ instance }}-spinner">
+                        <span>Test connection</span><span id="{{ app_key }}-{{ instance }}-spinner" class="spinner htmx-indicator"></span>
+                    </button>
                 </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="discord-frequency" class="block text-xs font-bold text-slate-400 uppercase mb-2">Frequency</label>
-                        <select id="discord-frequency" name="discord_frequency" onchange="updateDiscordSchedule()" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
-                            <option value="daily" {% if discord_frequency == "daily" %}selected{% endif %}>Daily</option>
-                            <option value="weekly" {% if discord_frequency == "weekly" %}selected{% endif %}>Weekly</option>
-                            <option value="monthly" {% if discord_frequency == "monthly" %}selected{% endif %}>Monthly</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="discord-time" class="block text-xs font-bold text-slate-400 uppercase mb-2">Report time</label>
-                        <input id="discord-time" type="time" name="discord_time" value="{{ discord_time }}" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
-                    </div>
-                    <div id="discord-weekday-wrapper">
-                        <label for="discord-weekday" class="block text-xs font-bold text-slate-400 uppercase mb-2">Day of the week</label>
-                        <select id="discord-weekday" name="discord_weekday" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
-                            <option value="0" {% if discord_weekday == "0" %}selected{% endif %}>Monday</option>
-                            <option value="1" {% if discord_weekday == "1" %}selected{% endif %}>Tuesday</option>
-                            <option value="2" {% if discord_weekday == "2" %}selected{% endif %}>Wednesday</option>
-                            <option value="3" {% if discord_weekday == "3" %}selected{% endif %}>Thursday</option>
-                            <option value="4" {% if discord_weekday == "4" %}selected{% endif %}>Friday</option>
-                            <option value="5" {% if discord_weekday == "5" %}selected{% endif %}>Saturday</option>
-                            <option value="6" {% if discord_weekday == "6" %}selected{% endif %}>Sunday</option>
-                        </select>
-                    </div>
-                    <div id="discord-monthday-wrapper">
-                        <label for="discord-monthday" class="block text-xs font-bold text-slate-400 uppercase mb-2">Day of the month</label>
-                        <input id="discord-monthday" type="number" name="discord_monthday" min="1" max="28" value="{{ discord_monthday }}" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-white outline-none">
-                    </div>
+        <section class="settings-section discord-section">
+            <div class="section-heading">
+                <div class="section-title-group">
+                    <span class="section-icon section-icon-discord">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.3A17 17 0 0 0 15.4 4l-.5 1a15 15 0 0 1 3.5 1.1A12 12 0 0 0 6 6.1 15 15 0 0 1 9.5 5L9 4a17 17 0 0 0-4.1 1.3C2.3 9.2 1.6 13 2 16.7A15 15 0 0 0 7 19l1.2-1.7a10 10 0 0 1-1.6-.8 12 12 0 0 0 10.8 0 10 10 0 0 1-1.6.8L17 19a15 15 0 0 0 5-2.3c.4-4.3-.7-8-2.5-11.4Z"/></svg>
+                    </span>
+                    <div><h2>Discord reports</h2><p>Send duplicate summaries on a schedule.</p></div>
                 </div>
+                <label class="switch">
+                    <input id="discord-enabled" type="checkbox" name="discord_enabled" value="true" {% if discord_enabled %}checked{% endif %} data-controls="discord-settings">
+                    <span class="switch-track"><i></i></span>
+                    <span>Enabled</span>
+                </label>
+            </div>
 
-                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <button type="button" hx-post="/test-discord" hx-include="closest form" hx-target="#discord-test-result" hx-swap="innerHTML" class="bg-indigo-500/10 hover:bg-indigo-600 hover:text-white text-indigo-400 border border-indigo-500/30 px-5 py-2.5 rounded-xl font-bold transition-all">Send test report</button>
-                    <div id="discord-test-result" class="text-sm"></div>
+            <div id="discord-settings" class="discord-settings-grid">
+                <div class="field field-span-2">
+                    <label class="field-label" for="discord-webhook">Discord webhook URL</label>
+                    <input class="input" id="discord-webhook" type="password" name="discord_webhook" placeholder="https://discord.com/api/webhooks/..." value="{{ discord_webhook }}" autocomplete="off">
+                    <small class="field-help">Stored only in your persistent config directory.</small>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="discord-frequency">Frequency</label>
+                    <select class="input" id="discord-frequency" name="discord_frequency" data-schedule-select>
+                        <option value="daily" {% if discord_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if discord_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if discord_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="discord-time">Report time</label>
+                    <input class="input" id="discord-time" type="time" name="discord_time" value="{{ discord_time }}">
+                </div>
+                <div id="discord-weekday-wrapper" class="field schedule-weekly">
+                    <label class="field-label" for="discord-weekday">Day of the week</label>
+                    <select class="input" id="discord-weekday" name="discord_weekday">
+                        {% for value, day in [('0','Monday'),('1','Tuesday'),('2','Wednesday'),('3','Thursday'),('4','Friday'),('5','Saturday'),('6','Sunday')] %}
+                        <option value="{{ value }}" {% if discord_weekday == value %}selected{% endif %}>{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="discord-monthday-wrapper" class="field schedule-monthly">
+                    <label class="field-label" for="discord-monthday">Day of the month</label>
+                    <input class="input" id="discord-monthday" type="number" name="discord_monthday" min="1" max="28" value="{{ discord_monthday }}">
+                </div>
+                <div class="test-row field-span-2">
+                    <button type="button" class="button button-secondary button-small" hx-post="/test-discord" hx-include="closest form" hx-target="#discord-test-result" hx-indicator="#discord-test-spinner">
+                        <span>Send test report</span><span id="discord-test-spinner" class="spinner htmx-indicator"></span>
+                    </button>
+                    <span id="discord-test-result"></span>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1">Save</button>
+        <div class="form-actions">
+            <p>Changes are written to <code>/config/config.json</code>.</p>
+            <button type="submit" class="button button-primary">Save settings</button>
+        </div>
     </form>
-</div>
-
-<script>
-    function updateApplicationSettings(application) {
-        const enabled = document.getElementById(`${application}-enabled`).checked;
-        document.getElementById(`${application}-settings`).classList.toggle('hidden', !enabled);
-    }
-
-    function updateDiscordSettings() {
-        const enabled = document.getElementById('discord-enabled').checked;
-        document.getElementById('discord-settings').classList.toggle('hidden', !enabled);
-    }
-
-    function updateDiscordSchedule() {
-        const frequency = document.getElementById('discord-frequency').value;
-        document.getElementById('discord-weekday-wrapper').classList.toggle('hidden', frequency !== 'weekly');
-        document.getElementById('discord-monthday-wrapper').classList.toggle('hidden', frequency !== 'monthly');
-    }
-
-    updateApplicationSettings('sonarr');
-    updateApplicationSettings('radarr');
-    updateDiscordSettings();
-    updateDiscordSchedule();
-</script>
+</section>
