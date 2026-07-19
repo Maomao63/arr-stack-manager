@@ -45,6 +45,8 @@ services:
   arr-stack-manager:
     build:
       context: https://github.com/Maomao63/arr-stack-manager.git#main
+      pull: true
+    pull_policy: build
     container_name: arr-stack-manager
     restart: unless-stopped
     ports:
@@ -125,8 +127,15 @@ URLs entered in Settings.
 
 ## Updating
 
-`restart: unless-stopped` restarts the existing container, but it does not fetch
-changes from GitHub. Rebuild and recreate the container to install the newest
+`restart: unless-stopped` only restarts the existing container. It does not fetch
+changes from GitHub. This project builds an image directly from the Git repository,
+so a platform's **Pull Image** action does not update it either.
+
+The Compose template uses `pull_policy: build` to rebuild the application image
+when the stack is deployed, even if a previously built image already exists.
+`build.pull: true` also checks for a newer Python base image.
+
+Deploy the stack again, or run the following command, to install the newest
 version from the `main` branch:
 
 ```bash
@@ -139,6 +148,19 @@ To force a completely clean rebuild, use:
 docker compose build --no-cache --pull
 docker compose up -d --force-recreate
 ```
+
+If a deployment platform still reuses stale build layers, temporarily add
+`no_cache: true` below `pull: true`:
+
+```yaml
+build:
+  context: https://github.com/Maomao63/arr-stack-manager.git#main
+  pull: true
+  no_cache: true
+```
+
+Remove `no_cache: true` after the successful rebuild. Leaving it enabled makes
+every future deployment slower because all Dockerfile layers are rebuilt.
 
 The files in the configured host directory remain intact during an update.
 
