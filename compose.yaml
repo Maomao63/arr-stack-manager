@@ -6,6 +6,6 @@ services:
     ports:
       - "5005:8000"
     volumes:
-      - /mnt/user/appdata/arr-stack-manager:/app
+      - "${CONFIG_PATH:-./config}:/config"
     environment:
-      - TZ=Europe/Berlin
+      TZ: "${TZ:-Europe/Berlin}"

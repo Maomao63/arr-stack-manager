@@ -3,5 +3,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-# Wir nutzen /config für deine Appdata-Daten
+
+# Persistente Daten werden getrennt vom Programmcode unter /config abgelegt.
+RUN mkdir -p /config
+ENV CONFIG_DIR=/config
+VOLUME ["/config"]
+EXPOSE 8000
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

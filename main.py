@@ -9,8 +9,9 @@ from jinja2 import Environment, FileSystemLoader
 
 app = FastAPI()
 env = Environment(loader=FileSystemLoader("templates"))
-CONFIG_FILE = "/config/config.json"
-HISTORY_FILE = "/config/history.json"
+CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+HISTORY_FILE = os.path.join(CONFIG_DIR, "history.json")
 
 def load_config():
     default = {
