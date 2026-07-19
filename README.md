@@ -8,6 +8,16 @@ instances. Duplicates can be removed from the configured primary instance.
 The existing image, Compose service, and container identifiers remain
 `arr-stack-manager` for compatibility with current installations.
 
+## Screenshots
+
+### Home dashboard
+
+![Arr Duplicate Manager home dashboard](docs/screenshots/home-dashboard.png)
+
+### Compact layout
+
+![Arr Duplicate Manager compact dashboard layout](docs/screenshots/compact-dashboard.png)
+
 ## What the application compares
 
 The application is designed for users who operate two separate instances of
