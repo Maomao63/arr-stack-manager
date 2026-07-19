@@ -11,15 +11,12 @@ The **Arr-Stack-Manager** is your centralized hub for managing your media automa
 
 ## 📦 Installation
 
-You can get the stack up and running in just a few steps.
+Setup Instructions
 
-### Prerequisites
-* [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/) must be installed on your host.
+    Create a project directory and navigate into it:
 
-### Setup Instructions
+Bash
 
-1. Create a project directory and navigate into it:
-```bash
 mkdir arr-stack-manager && cd arr-stack-manager
 
     Create a compose.yaml file with the following content:
@@ -35,7 +32,6 @@ services:
     ports:
       - "5005:8000"
     volumes:
-      # Path to your configuration folder
       - ./config:/config
     environment:
       - TZ=Europe/Berlin
@@ -51,10 +47,3 @@ docker compose up -d
 Plaintext
 
 http://<YOUR-HOST-IP>:5005
-
-⚙️ Configuration
-
-The ./config folder will be created automatically upon the first launch and contains your config.json. You can adjust your settings there at any time.
-📝 License
-
-Open Source & DIY. Happy automating!
