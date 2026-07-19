@@ -1,13 +1,28 @@
 # 🚀 Arr Stack Manager
 
-Arr Stack Manager is a lightweight web dashboard for comparing two Sonarr and
-two Radarr instances. It helps you find duplicate series or movies and remove
-them from the configured primary instance.
+Arr Stack Manager is a lightweight web dashboard that checks two instances of
+the same application for duplicate content. It compares Sonarr A with Sonarr B
+and Radarr A with Radarr B, then shows series or movies that exist in both
+instances. Duplicates can be removed from the configured primary instance.
+
+## What the application compares
+
+The application is designed for users who operate two separate instances of
+Sonarr, Radarr, or both:
+
+| Primary instance | Reference instance | Duplicate identifier |
+| --- | --- | --- |
+| Sonarr A | Sonarr B | TVDB ID |
+| Radarr A | Radarr B | TMDB ID |
+
+An item is considered a duplicate when the same identifier exists in both
+instances. Instance A is the primary instance where deletion is available.
+Instance B is only used as the comparison reference and is not modified.
 
 ## Features
 
-- Compare two Sonarr instances by TVDB ID
-- Compare two Radarr instances by TMDB ID
+- Check two Sonarr instances for duplicate series by TVDB ID
+- Check two Radarr instances for duplicate movies by TMDB ID
 - Show the file and episode status of matching items
 - Remove items and their files from the configured primary instance
 - Keep a history of the last 100 deletions
