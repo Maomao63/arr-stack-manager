@@ -21,10 +21,12 @@ HISTORY_FILE = os.path.join(CONFIG_DIR, "history.json")
 NOTIFICATION_STATE_FILE = os.path.join(CONFIG_DIR, "notification_state.json")
 
 DEFAULT_CONFIG = {
+    "sonarr_enabled": True,
     "sonarr_a_url": "",
     "sonarr_a_api": "",
     "sonarr_b_url": "",
     "sonarr_b_api": "",
+    "radarr_enabled": True,
     "radarr_a_url": "",
     "radarr_a_api": "",
     "radarr_b_url": "",
@@ -92,10 +94,12 @@ def build_config_from_form(form):
         monthday = "1"
 
     return {
+        "sonarr_enabled": form.get("sonarr_enabled") == "true",
         "sonarr_a_url": str(form.get("sonarr_a_url", "")).strip(),
         "sonarr_a_api": str(form.get("sonarr_a_api", "")).strip(),
         "sonarr_b_url": str(form.get("sonarr_b_url", "")).strip(),
         "sonarr_b_api": str(form.get("sonarr_b_api", "")).strip(),
+        "radarr_enabled": form.get("radarr_enabled") == "true",
         "radarr_a_url": str(form.get("radarr_a_url", "")).strip(),
         "radarr_a_api": str(form.get("radarr_a_api", "")).strip(),
         "radarr_b_url": str(form.get("radarr_b_url", "")).strip(),
@@ -138,6 +142,20 @@ def fetch_api_for_report(url, api_key, endpoint):
     return data
 
 
+def test_arr_connection(url, api_key):
+    if not url or not api_key:
+        return False
+    try:
+        response = requests.get(
+            f"{url.rstrip('/')}/api/v3/system/status",
+            headers={"X-Api-Key": api_key},
+            timeout=10,
+        )
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
+
+
 def delete_api(url, api_key, endpoint, item_id):
     try:
         response = requests.delete(
@@ -174,6 +192,8 @@ def is_valid_discord_webhook(webhook_url):
 
 
 def get_sonarr_duplicate_titles(config):
+    if not config.get("sonarr_enabled", True):
+        return None
     required = (
         config["sonarr_a_url"],
         config["sonarr_a_api"],
@@ -195,6 +215,8 @@ def get_sonarr_duplicate_titles(config):
 
 
 def get_radarr_duplicate_titles(config):
+    if not config.get("radarr_enabled", True):
+        return None
     required = (
         config["radarr_a_url"],
         config["radarr_a_api"],
@@ -230,15 +252,20 @@ def create_duplicate_report(config):
         datetime.now().strftime("%Y-%m-%d %H:%M"),
         "",
     ]
-    try:
-        lines.extend(format_report_section("Sonarr", get_sonarr_duplicate_titles(config)))
-    except (requests.RequestException, ValueError) as error:
-        lines.append(f"**Sonarr:** Check failed ({error})")
-    lines.append("")
-    try:
-        lines.extend(format_report_section("Radarr", get_radarr_duplicate_titles(config)))
-    except (requests.RequestException, ValueError) as error:
-        lines.append(f"**Radarr:** Check failed ({error})")
+    if config.get("sonarr_enabled", True):
+        try:
+            lines.extend(format_report_section("Sonarr", get_sonarr_duplicate_titles(config)))
+        except (requests.RequestException, ValueError) as error:
+            lines.append(f"**Sonarr:** Check failed ({error})")
+    if config.get("sonarr_enabled", True) and config.get("radarr_enabled", True):
+        lines.append("")
+    if config.get("radarr_enabled", True):
+        try:
+            lines.extend(format_report_section("Radarr", get_radarr_duplicate_titles(config)))
+        except (requests.RequestException, ValueError) as error:
+            lines.append(f"**Radarr:** Check failed ({error})")
+    if not config.get("sonarr_enabled", True) and not config.get("radarr_enabled", True):
+        lines.append("No applications are enabled.")
     return "\n".join(lines)
 
 
@@ -351,7 +378,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    return HTMLResponse(content=env.get_template("index.html").render())
+    return HTMLResponse(content=env.get_template("index.html").render(load_config()))
 
 
 @app.get("/settings", response_class=HTMLResponse)
@@ -368,6 +395,8 @@ async def history_page():
 @app.get("/sonarr-data", response_class=HTMLResponse)
 async def sonarr_data():
     config = load_config()
+    if not config.get("sonarr_enabled", True):
+        return HTMLResponse("<div class='text-slate-400'>Sonarr is disabled in Settings.</div>")
     series_a = fetch_api(config["sonarr_a_url"], config["sonarr_a_api"], "series")
     series_b = fetch_api(config["sonarr_b_url"], config["sonarr_b_api"], "series")
     if not series_a or not series_b:
@@ -406,6 +435,8 @@ async def sonarr_data():
 @app.get("/radarr-data", response_class=HTMLResponse)
 async def radarr_data():
     config = load_config()
+    if not config.get("radarr_enabled", True):
+        return HTMLResponse("<div class='text-slate-400'>Radarr is disabled in Settings.</div>")
     movies_a = fetch_api(config["radarr_a_url"], config["radarr_a_api"], "movie")
     movies_b = fetch_api(config["radarr_b_url"], config["radarr_b_api"], "movie")
     if not movies_a or not movies_b:
@@ -434,8 +465,12 @@ async def radarr_data():
 async def delete_item(app_type: str, item_id: int, title: str = "Unknown"):
     config = load_config()
     if app_type == "sonarr":
+        if not config.get("sonarr_enabled", True):
+            return HTMLResponse("<div class='text-red-400'>Sonarr is disabled in Settings.</div>", status_code=400)
         url, api_key, endpoint = config["sonarr_a_url"], config["sonarr_a_api"], "series"
     elif app_type == "radarr":
+        if not config.get("radarr_enabled", True):
+            return HTMLResponse("<div class='text-red-400'>Radarr is disabled in Settings.</div>", status_code=400)
         url, api_key, endpoint = config["radarr_a_url"], config["radarr_a_api"], "movie"
     else:
         return HTMLResponse("<div class='text-red-400'>Unsupported application</div>", status_code=400)
@@ -466,3 +501,16 @@ async def test_discord(request: Request):
     return HTMLResponse(
         "<div class='text-emerald-400 font-semibold'>Discord test report sent successfully.</div>"
     )
+
+
+@app.post("/test-arr-connection/{app_type}/{instance}", response_class=HTMLResponse)
+async def test_connection(app_type: str, instance: str, request: Request):
+    if app_type not in {"sonarr", "radarr"} or instance not in {"a", "b"}:
+        return HTMLResponse("<span class='text-red-400 font-semibold'>Connection failed</span>")
+    form = await request.form()
+    url = str(form.get(f"{app_type}_{instance}_url", "")).strip()
+    api_key = str(form.get(f"{app_type}_{instance}_api", "")).strip()
+    connected = await asyncio.to_thread(test_arr_connection, url, api_key)
+    if connected:
+        return HTMLResponse("<span class='text-emerald-400 font-semibold'>Connected</span>")
+    return HTMLResponse("<span class='text-red-400 font-semibold'>Connection failed</span>")

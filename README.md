@@ -23,6 +23,8 @@ Instance B is only used as the comparison reference and is not modified.
 
 - Check two Sonarr instances for duplicate series by TVDB ID
 - Check two Radarr instances for duplicate movies by TMDB ID
+- Enable only the Sonarr and Radarr integrations you use
+- Test every URL and API key directly from Settings
 - Show the file and episode status of matching items
 - Remove items and their files from the configured primary instance
 - Keep a history of the last 100 deletions
@@ -134,13 +136,18 @@ docker compose config
 
 1. Open the dashboard in your browser.
 2. Select **Settings**.
-3. Enter the URL and API key for both Sonarr instances.
-4. Enter the URL and API key for both Radarr instances.
-5. Save the configuration.
+3. Enable the Sonarr and/or Radarr integrations you want to use.
+4. Enter the URL and API key for both instances of each enabled application.
+5. Use **Test connection** for Instance A and Instance B. A successful URL and
+   API-key combination displays **Connected** in green.
+6. Save the configuration.
 
 Instance A is the primary instance from which items can be deleted. Instance B
 is used as the comparison reference. The container must be able to reach the
-URLs entered in Settings.
+URLs entered in Settings. Disabling an integration hides it from navigation and
+prevents API requests, deletion requests, and Discord checks for that application.
+The stored URLs and API keys are retained and become available again when the
+integration is re-enabled.
 
 ## Discord notifications
 
@@ -157,10 +164,10 @@ To configure notifications:
 5. Use **Send test report** to verify the webhook and Arr connections.
 6. Save the configuration.
 
-The report checks both Sonarr and Radarr. It lists duplicates when they are
+The report checks every enabled integration. It lists duplicates when they are
 found and explicitly reports **No duplicates found** when an application has no
-matching items. Applications without complete connection settings are shown as
-not configured.
+matching items. Enabled applications without complete connection settings are
+shown as not configured. Disabled applications are omitted from the report.
 
 Daily reports run every day at the selected time. Weekly reports also use the
 selected weekday. Monthly reports use a selectable day from 1 through 28 so the

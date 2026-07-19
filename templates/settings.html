@@ -2,32 +2,62 @@
     <h2 class="text-3xl mb-8 font-extrabold text-white">Configuration</h2>
     <form action="/save-config" method="post" class="space-y-8">
         <div>
-            <h3 class="text-xl font-bold text-blue-400 mb-4">Sonarr</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex items-center justify-between gap-6 mb-4">
+                <h3 class="text-xl font-bold text-blue-400">Sonarr</h3>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="sonarr-enabled" type="checkbox" name="sonarr_enabled" value="true" class="sr-only peer" {% if sonarr_enabled %}checked{% endif %} onchange="updateApplicationSettings('sonarr')">
+                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
+                </label>
+            </div>
+            <div id="sonarr-settings" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
-                    <input type="text" name="sonarr_a_url" placeholder="URL" value="{{sonarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <input type="password" name="sonarr_a_api" placeholder="API Key" value="{{sonarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input id="sonarr-a-url" type="text" name="sonarr_a_url" placeholder="URL" value="{{sonarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input id="sonarr-a-api" type="password" name="sonarr_a_api" placeholder="API Key" value="{{sonarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <div class="flex items-center gap-3">
+                        <button type="button" hx-post="/test-arr-connection/sonarr/a" hx-include="#sonarr-a-url, #sonarr-a-api" hx-target="#sonarr-a-result" class="bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
+                        <span id="sonarr-a-result" class="text-sm"></span>
+                    </div>
                 </div>
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance B (reference)</label>
-                    <input type="text" name="sonarr_b_url" placeholder="URL" value="{{sonarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
-                    <input type="password" name="sonarr_b_api" placeholder="API Key" value="{{sonarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input id="sonarr-b-url" type="text" name="sonarr_b_url" placeholder="URL" value="{{sonarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <input id="sonarr-b-api" type="password" name="sonarr_b_api" placeholder="API Key" value="{{sonarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-white outline-none">
+                    <div class="flex items-center gap-3">
+                        <button type="button" hx-post="/test-arr-connection/sonarr/b" hx-include="#sonarr-b-url, #sonarr-b-api" hx-target="#sonarr-b-result" class="bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
+                        <span id="sonarr-b-result" class="text-sm"></span>
+                    </div>
                 </div>
             </div>
         </div>
         <div>
-            <h3 class="text-xl font-bold text-yellow-400 mb-4">Radarr</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex items-center justify-between gap-6 mb-4">
+                <h3 class="text-xl font-bold text-yellow-400">Radarr</h3>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="radarr-enabled" type="checkbox" name="radarr_enabled" value="true" class="sr-only peer" {% if radarr_enabled %}checked{% endif %} onchange="updateApplicationSettings('radarr')">
+                    <div class="w-12 h-7 bg-slate-700 rounded-full peer peer-checked:bg-yellow-600 peer-focus:ring-2 peer-focus:ring-yellow-400/50 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                    <span class="ml-3 text-sm font-semibold text-slate-300">Enabled</span>
+                </label>
+            </div>
+            <div id="radarr-settings" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance A (items are deleted here)</label>
-                    <input type="text" name="radarr_a_url" placeholder="URL" value="{{radarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <input type="password" name="radarr_a_api" placeholder="API Key" value="{{radarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input id="radarr-a-url" type="text" name="radarr_a_url" placeholder="URL" value="{{radarr_a_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input id="radarr-a-api" type="password" name="radarr_a_api" placeholder="API Key" value="{{radarr_a_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <div class="flex items-center gap-3">
+                        <button type="button" hx-post="/test-arr-connection/radarr/a" hx-include="#radarr-a-url, #radarr-a-api" hx-target="#radarr-a-result" class="bg-yellow-500/10 hover:bg-yellow-600 hover:text-white text-yellow-400 border border-yellow-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
+                        <span id="radarr-a-result" class="text-sm"></span>
+                    </div>
                 </div>
                 <div class="space-y-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5">
                     <label class="text-xs font-bold text-slate-400 uppercase">Instance B (reference)</label>
-                    <input type="text" name="radarr_b_url" placeholder="URL" value="{{radarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
-                    <input type="password" name="radarr_b_api" placeholder="API Key" value="{{radarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input id="radarr-b-url" type="text" name="radarr_b_url" placeholder="URL" value="{{radarr_b_url}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <input id="radarr-b-api" type="password" name="radarr_b_api" placeholder="API Key" value="{{radarr_b_api}}" class="w-full bg-black/40 border border-slate-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none">
+                    <div class="flex items-center gap-3">
+                        <button type="button" hx-post="/test-arr-connection/radarr/b" hx-include="#radarr-b-url, #radarr-b-api" hx-target="#radarr-b-result" class="bg-yellow-500/10 hover:bg-yellow-600 hover:text-white text-yellow-400 border border-yellow-500/30 px-4 py-2 rounded-xl text-sm font-bold transition-all">Test connection</button>
+                        <span id="radarr-b-result" class="text-sm"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,6 +125,11 @@
 </div>
 
 <script>
+    function updateApplicationSettings(application) {
+        const enabled = document.getElementById(`${application}-enabled`).checked;
+        document.getElementById(`${application}-settings`).classList.toggle('hidden', !enabled);
+    }
+
     function updateDiscordSettings() {
         const enabled = document.getElementById('discord-enabled').checked;
         document.getElementById('discord-settings').classList.toggle('hidden', !enabled);
@@ -106,6 +141,8 @@
         document.getElementById('discord-monthday-wrapper').classList.toggle('hidden', frequency !== 'monthly');
     }
 
+    updateApplicationSettings('sonarr');
+    updateApplicationSettings('radarr');
     updateDiscordSettings();
     updateDiscordSchedule();
 </script>
