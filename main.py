@@ -49,7 +49,7 @@ def log_history(app_type, title):
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M")
     history.insert(0, {"time": timestamp, "app": app_type.capitalize(), "title": title})
     with open(HISTORY_FILE, "w") as f:
-        json.dump(history[:100], f) # Behält nur die letzten 100 Einträge
+        json.dump(history[:100], f) # Keep only the latest 100 entries
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
@@ -75,7 +75,7 @@ async def sonarr_data():
     series_a = fetch_api(c["sonarr_a_url"], c["sonarr_a_api"], "series")
     series_b = fetch_api(c["sonarr_b_url"], c["sonarr_b_api"], "series")
     if not series_a or not series_b:
-        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Keine Verbindung zu Sonarr. Einstellungen prüfen.</div>")
+        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Unable to connect to Sonarr. Check your settings.</div>")
 
     dict_b = {s.get("tvdbId"): s for s in series_b if s.get("tvdbId")}
     duplicates = []
@@ -86,7 +86,7 @@ async def sonarr_data():
             stats_a = s.get("statistics", {})
             ep_file_a = stats_a.get("episodeFileCount", 0)
             
-            # FILTER: Wenn keine Episoden geladen sind, ausblenden!
+            # Hide series that do not have any downloaded episodes.
             if ep_file_a == 0:
                 continue 
                 
@@ -96,7 +96,7 @@ async def sonarr_data():
             ep_file_b = stats_b.get("episodeFileCount", 0)
             ep_total_b = stats_b.get("totalEpisodeCount", 0)
             
-            status = f"Instanz A: {ep_file_a}/{ep_total_a} Folgen | Instanz B: {ep_file_b}/{ep_total_b} Folgen"
+            status = f"Instance A: {ep_file_a}/{ep_total_a} episodes | Instance B: {ep_file_b}/{ep_total_b} episodes"
             safe_title = quote(s["title"])
             
             duplicates.append({"id": s["id"], "title": s["title"], "status": status, "complete": ep_file_a == ep_total_a, "safe_title": safe_title})
@@ -109,7 +109,7 @@ async def radarr_data():
     movies_a = fetch_api(c["radarr_a_url"], c["radarr_a_api"], "movie")
     movies_b = fetch_api(c["radarr_b_url"], c["radarr_b_api"], "movie")
     if not movies_a or not movies_b:
-        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Keine Verbindung zu Radarr. Einstellungen prüfen.</div>")
+        return HTMLResponse("<div class='text-red-400 bg-red-500/10 p-6 rounded-2xl border border-red-500/20'>Unable to connect to Radarr. Check your settings.</div>")
 
     dict_b = {m.get("tmdbId"): m for m in movies_b if m.get("tmdbId")}
     duplicates = []
@@ -117,13 +117,13 @@ async def radarr_data():
     for m in movies_a:
         tmdb = m.get("tmdbId")
         if tmdb in dict_b:
-            # FILTER: Wenn der Film noch keine Datei hat, ausblenden!
+            # Hide movies that do not have a file yet.
             if not m.get("hasFile"):
                 continue
                 
             has_file_b = dict_b[tmdb].get("hasFile")
-            b_status = "Vorhanden" if has_file_b else "Fehlt"
-            status = f"Instanz A: Vorhanden | Instanz B: {b_status}"
+            b_status = "Available" if has_file_b else "Missing"
+            status = f"Instance A: Available | Instance B: {b_status}"
             safe_title = quote(m["title"])
             
             duplicates.append({"id": m["id"], "title": m["title"], "status": status, "complete": True, "safe_title": safe_title})
@@ -131,13 +131,13 @@ async def radarr_data():
     return HTMLResponse(content=env.get_template("radarr.html").render(duplicates=duplicates))
 
 @app.delete("/delete/{app_type}/{item_id}", response_class=HTMLResponse)
-async def delete_item(app_type: str, item_id: int, title: str = "Unbekannt"):
+async def delete_item(app_type: str, item_id: int, title: str = "Unknown"):
     c = load_config()
     url, api, endpoint = (c["sonarr_a_url"], c["sonarr_a_api"], "series") if app_type == "sonarr" else (c["radarr_a_url"], c["radarr_a_api"], "movie")
     if delete_api(url, api, endpoint, item_id):
         log_history(app_type, title)
-        return HTMLResponse(f"<div class='text-green-400 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20'>Erfolgreich gelöscht: {title}</div>")
-    return HTMLResponse("<div class='text-red-400 font-bold bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20'>Fehler beim Löschen</div>")
+        return HTMLResponse(f"<div class='text-green-400 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20'>Successfully deleted: {title}</div>")
+    return HTMLResponse("<div class='text-red-400 font-bold bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20'>Failed to delete item</div>")
 
 @app.post("/save-config")
 async def save_config(sonarr_a_url: str=Form(""), sonarr_a_api: str=Form(""), sonarr_b_url: str=Form(""), sonarr_b_api: str=Form(""), radarr_a_url: str=Form(""), radarr_a_api: str=Form(""), radarr_b_url: str=Form(""), radarr_b_api: str=Form("")):

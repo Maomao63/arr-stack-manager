@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <title>Arr-Sync V4</title>
@@ -13,15 +13,15 @@
             <div class="flex space-x-2 bg-slate-800/50 p-1.5 rounded-2xl border border-white/5">
                 <button hx-get="/sonarr-data" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-blue-500/20 rounded-xl transition-all">Sonarr</button>
                 <button hx-get="/radarr-data" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-yellow-500/20 rounded-xl transition-all">Radarr</button>
-                <button hx-get="/history" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all">Verlauf</button>
-                <button hx-get="/settings" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-white/10 rounded-xl transition-all">Einstellungen</button>
+                <button hx-get="/history" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all">History</button>
+                <button hx-get="/settings" hx-target="#content" class="px-6 py-2.5 font-semibold hover:text-white hover:bg-white/10 rounded-xl transition-all">Settings</button>
             </div>
         </div>
     </nav>
     <main id="content" class="p-8 max-w-7xl mx-auto mt-8">
         <div class="text-center mt-32 space-y-4">
-            <h2 class="text-5xl font-extrabold tracking-tight">Willkommen</h2>
-            <p class="text-slate-400 text-xl">Wähle oben Sonarr oder Radarr, um Duplikate zwischen deinen Instanzen zu finden.</p>
+            <h2 class="text-5xl font-extrabold tracking-tight">Welcome</h2>
+            <p class="text-slate-400 text-xl">Select Sonarr or Radarr above to find duplicates across your instances.</p>
         </div>
     </main>
 </body>
