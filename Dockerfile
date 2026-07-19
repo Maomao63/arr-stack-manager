@@ -1,4 +1,8 @@
 FROM python:3.12-slim
+
+LABEL org.opencontainers.image.source="https://github.com/Maomao63/arr-stack-manager" \
+      org.opencontainers.image.description="Dashboard for finding duplicates across Sonarr and Radarr instances"
+
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

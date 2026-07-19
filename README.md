@@ -29,6 +29,7 @@ Instance B is only used as the comparison reference and is not modified.
 - Remove items and their files from the configured primary instance
 - Keep a history of the last 100 deletions
 - Send optional scheduled duplicate reports to Discord
+- Display the installed version and notify when an update is available
 - Store all persistent data in a freely selectable host directory
 - Run as a small Docker container based on Python Slim
 
@@ -53,6 +54,7 @@ same host directory is mounted to `/config`.
 - Docker Engine or Docker Desktop
 - Docker Compose v2
 - Network access from the container to the configured Sonarr/Radarr instances
+- Network access to `ghcr.io` for image downloads
 
 ## Installation with Docker Compose
 
@@ -62,10 +64,8 @@ Create a new directory for the Compose project and save the following content as
 ```yaml
 services:
   arr-stack-manager:
-    build:
-      context: https://github.com/Maomao63/arr-stack-manager.git#main
-      pull: true
-    pull_policy: build
+    image: ghcr.io/maomao63/arr-stack-manager:latest
+    pull_policy: always
     container_name: arr-stack-manager
     restart: unless-stopped
     ports:
@@ -79,8 +79,11 @@ services:
 Start the application:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
+
+The image is published for `linux/amd64` and `linux/arm64`. No local source
+checkout or image build is required.
 
 Open the dashboard at:
 
@@ -101,7 +104,8 @@ arr-stack-manager/
 ├── compose.yaml
 └── config/
     ├── config.json
-    └── history.json
+    ├── history.json
+    └── notification_state.json
 ```
 
 To choose another location, create a file named `.env` next to `compose.yaml`:
@@ -180,40 +184,21 @@ report immediately and works independently of the enabled switch.
 
 ## Updating
 
-`restart: unless-stopped` only restarts the existing container. It does not fetch
-changes from GitHub. This project builds an image directly from the Git repository,
-so a platform's **Pull Image** action does not update it either.
+The installed version is displayed in the footer. The application checks the
+project's `VERSION` file on GitHub and shows an update notice when a newer
+version is available. If GitHub cannot be reached, the rest of the application
+continues to work normally.
 
-The Compose template uses `pull_policy: build` to rebuild the application image
-when the stack is deployed, even if a previously built image already exists.
-`build.pull: true` also checks for a newer Python base image.
-
-Deploy the stack again, or run the following command, to install the newest
-version from the `main` branch:
+The Compose template uses `pull_policy: always`, so deploying the stack checks
+GitHub Container Registry for a newer `latest` image. To update manually, run:
 
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
-To force a completely clean rebuild, use:
-
-```bash
-docker compose build --no-cache --pull
-docker compose up -d --force-recreate
-```
-
-If a deployment platform still reuses stale build layers, temporarily add
-`no_cache: true` below `pull: true`:
-
-```yaml
-build:
-  context: https://github.com/Maomao63/arr-stack-manager.git#main
-  pull: true
-  no_cache: true
-```
-
-Remove `no_cache: true` after the successful rebuild. Leaving it enabled makes
-every future deployment slower because all Dockerfile layers are rebuilt.
+In management platforms such as Komodo, use **Pull Image** followed by
+**Redeploy**, or simply deploy when the platform honors `pull_policy: always`.
 
 The files in the configured host directory remain intact during an update.
 

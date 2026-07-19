@@ -1,6 +1,7 @@
 services:
   arr-stack-manager:
-    build: .
+    image: ghcr.io/maomao63/arr-stack-manager:latest
+    pull_policy: always
     container_name: arr-stack-manager
     restart: unless-stopped
     ports:

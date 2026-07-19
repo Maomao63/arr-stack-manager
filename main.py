@@ -3,6 +3,8 @@ import html
 import json
 import logging
 import os
+import re
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from urllib.parse import quote, urlparse
@@ -19,6 +21,13 @@ CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 HISTORY_FILE = os.path.join(CONFIG_DIR, "history.json")
 NOTIFICATION_STATE_FILE = os.path.join(CONFIG_DIR, "notification_state.json")
+VERSION_FILE = os.path.join(os.path.dirname(__file__), "VERSION")
+UPDATE_CHECK_URL = os.environ.get(
+    "UPDATE_CHECK_URL",
+    "https://raw.githubusercontent.com/Maomao63/arr-stack-manager/main/VERSION",
+)
+UPDATE_CHECK_INTERVAL = 3600
+UPDATE_CACHE = {"checked_at": None, "latest_version": None}
 
 DEFAULT_CONFIG = {
     "sonarr_enabled": True,
@@ -43,6 +52,49 @@ env = Environment(
     loader=FileSystemLoader("templates"),
     autoescape=select_autoescape(["html", "xml"]),
 )
+
+
+def read_app_version():
+    try:
+        with open(VERSION_FILE, "r", encoding="utf-8") as file:
+            version = file.read().strip()
+    except OSError:
+        return "unknown"
+    return version if re.fullmatch(r"\d+\.\d+\.\d+", version) else "unknown"
+
+
+APP_VERSION = read_app_version()
+
+
+def version_tuple(version):
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version or ""):
+        return None
+    return tuple(int(part) for part in version.split("."))
+
+
+def get_latest_version():
+    now = time.monotonic()
+    checked_at = UPDATE_CACHE["checked_at"]
+    if checked_at is not None and now - checked_at < UPDATE_CHECK_INTERVAL:
+        return UPDATE_CACHE["latest_version"]
+
+    latest_version = None
+    try:
+        response = requests.get(
+            UPDATE_CHECK_URL,
+            headers={"User-Agent": f"arr-stack-manager/{APP_VERSION}"},
+            timeout=5,
+        )
+        if response.status_code == 200:
+            candidate = response.text.strip()
+            if version_tuple(candidate):
+                latest_version = candidate
+    except requests.RequestException:
+        pass
+
+    UPDATE_CACHE["checked_at"] = now
+    UPDATE_CACHE["latest_version"] = latest_version
+    return latest_version
 
 
 def load_json(path, default):
@@ -378,7 +430,28 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    return HTMLResponse(content=env.get_template("index.html").render(load_config()))
+    return HTMLResponse(
+        content=env.get_template("index.html").render(
+            load_config(),
+            app_version=APP_VERSION,
+        )
+    )
+
+
+@app.get("/version-status", response_class=HTMLResponse)
+async def version_status():
+    latest_version = await asyncio.to_thread(get_latest_version)
+    installed = version_tuple(APP_VERSION)
+    latest = version_tuple(latest_version)
+    if installed and latest and latest > installed:
+        return HTMLResponse(
+            "<a href='https://github.com/Maomao63/arr-stack-manager' "
+            "target='_blank' rel='noopener noreferrer' "
+            "class='text-amber-400 hover:text-amber-300 font-semibold'>"
+            f"Update available: v{latest_version} — pull the latest image and redeploy"
+            "</a>"
+        )
+    return HTMLResponse("")
 
 
 @app.get("/settings", response_class=HTMLResponse)
